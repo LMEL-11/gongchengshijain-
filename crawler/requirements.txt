@@ -1,0 +1,6 @@
+# 爬虫依赖（建议装进项目根目录的同一个 .venv，以便管道复用后端模型）
+#   source ../.venv/bin/activate
+#   pip install -r requirements.txt
+Scrapy>=2.11
+# 说明：itemadapter / parsel / lxml / twisted 等由 Scrapy 自动作为依赖安装。
+# 数据库写入复用 backend/ 的 Flask + SQLAlchemy，无需在此重复声明。

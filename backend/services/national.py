@@ -1,0 +1,312 @@
+"""全国二手房数据服务（基于真实 province_data.csv）。
+
+数据列：省份, 城市, 二手房, 新房, 租房（均为挂牌量）。
+为与地图（DataV GeoJSON）的区域名匹配，名称统一做规范化处理。
+"""
+import csv
+from functools import lru_cache
+from pathlib import Path
+
+from sqlalchemy import func
+
+from extensions import db
+from models import City, District, Property
+
+DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "province_data.csv"
+HOUSE_INFO_FILE = Path(__file__).resolve().parent.parent / "data" / "raw" / "house_info.tsv"
+
+# 长名 -> 短名（自治区/特别行政区），其余按后缀裁剪。
+_SPECIAL = {
+    "内蒙古自治区": "内蒙古",
+    "广西壮族自治区": "广西",
+    "宁夏回族自治区": "宁夏",
+    "新疆维吾尔自治区": "新疆",
+    "西藏自治区": "西藏",
+    "香港特别行政区": "香港",
+    "澳门特别行政区": "澳门",
+}
+
+
+def normalize_name(name: str) -> str:
+    """北京市->北京、山东省->山东、崂山区->崂山、内蒙古自治区->内蒙古。幂等。"""
+    if not name:
+        return ""
+    name = name.strip()
+    if name in _SPECIAL:
+        return _SPECIAL[name]
+    for suffix in ("特别行政区", "自治区", "省", "市", "区", "县"):
+        if name.endswith(suffix) and len(name) - len(suffix) >= 2:
+            return name[: -len(suffix)]
+    return name
+
+
+def _num(value: str) -> int:
+    value = (value or "").strip().replace(",", "")
+    return int(value) if value.isdigit() else 0
+
+
+@lru_cache(maxsize=1)
+def _rows() -> list[dict]:
+    rows = []
+    with open(DATA_FILE, encoding="utf-8-sig") as f:  # utf-8-sig 去除 BOM
+        for r in csv.DictReader(f):
+            rows.append(
+                {
+                    "province": normalize_name(r.get("省份", "")),
+                    "city": normalize_name(r.get("城市", "")),
+                    "ershou": _num(r.get("二手房")),
+                    "xinfang": _num(r.get("新房")),
+                    "zufang": _num(r.get("租房")),
+                }
+            )
+    return rows
+
+
+def summary() -> dict:
+    rows = _rows()
+    top_cities = sorted(
+        ({"name": r["city"], "value": r["ershou"]} for r in rows),
+        key=lambda x: x["value"],
+        reverse=True,
+    )[:10]
+    return {
+        "ershou_total": sum(r["ershou"] for r in rows),
+        "xinfang_total": sum(r["xinfang"] for r in rows),
+        "zufang_total": sum(r["zufang"] for r in rows),
+        "province_count": len({r["province"] for r in rows}),
+        "city_count": len(rows),
+        "top_cities": top_cities,
+    }
+
+
+def provinces() -> list[dict]:
+    """各省聚合（二手房/新房/租房合计 + 城市数），按二手房降序。"""
+    agg: dict[str, dict] = {}
+    for r in _rows():
+        a = agg.setdefault(
+            r["province"],
+            {"name": r["province"], "ershou": 0, "xinfang": 0, "zufang": 0, "city_count": 0},
+        )
+        a["ershou"] += r["ershou"]
+        a["xinfang"] += r["xinfang"]
+        a["zufang"] += r["zufang"]
+        a["city_count"] += 1
+    rows = sorted(agg.values(), key=lambda x: x["ershou"], reverse=True)
+    for i, r in enumerate(rows, 1):
+        r["rank"] = i
+    return rows
+
+
+def cities(province: str) -> list[dict]:
+    """某省下属城市列表，按二手房降序。province 可传长名或短名。"""
+    key = normalize_name(province)
+    rows = [
+        {"name": r["city"], "ershou": r["ershou"], "xinfang": r["xinfang"], "zufang": r["zufang"]}
+        for r in _rows()
+        if r["province"] == key
+    ]
+    return sorted(rows, key=lambda x: x["ershou"], reverse=True)
+
+
+# ===== 基于真实采集房源（Property 表）的聚合 —— 供大屏「真实数据」模式 =====
+# 区域名沿用 normalize_name，与地图 GeoJSON（DataV）一致；City.province / City.name
+# 入库时已是短名，可直接匹配。
+
+def _rooms_bucket(rooms: int) -> str:
+    r = rooms or 0
+    if r <= 1:
+        return "1室"
+    if r == 2:
+        return "2室"
+    if r == 3:
+        return "3室"
+    return "4室+"
+
+
+def _clean_text(value: str) -> str:
+    value = (value or "").strip()
+    if value in {"None", "暂无数据", "未知"}:
+        return ""
+    return value
+
+
+@lru_cache(maxsize=1)
+def _business_area_admin_map() -> dict[tuple[str, str], str]:
+    """Map (city, business area) to administrative district from raw TSV.
+
+    The imported ``districts.name`` for Shandong data is mostly the business
+    area column (``quyu``). The city-level DataV map, however, uses official
+    administrative districts (``region``). This lookup lets the big screen roll
+    business areas up to the matching map regions without changing property
+    detail records.
+    """
+    mapping: dict[tuple[str, str], dict[str, int]] = {}
+    if not HOUSE_INFO_FILE.exists():
+        return {}
+
+    with open(HOUSE_INFO_FILE, encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f, delimiter="\t"):
+            city = normalize_name(_clean_text(row.get("city", "")))
+            business_area = normalize_name(_clean_text(row.get("quyu", "")))
+            admin = _clean_text(row.get("region", ""))
+            if not city or not business_area or not admin:
+                continue
+            bucket = mapping.setdefault((city, business_area), {})
+            bucket[admin] = bucket.get(admin, 0) + 1
+
+    return {
+        key: max(counts.items(), key=lambda item: item[1])[0]
+        for key, counts in mapping.items()
+    }
+
+
+def real_summary() -> dict:
+    """真实房源总量、覆盖省/市/商圈数、平均单价、城市 TOP10、户型分布。"""
+    total = db.session.query(func.count(Property.id)).scalar() or 0
+    avg_price = db.session.query(func.avg(Property.unit_price)).scalar() or 0
+    province_count = (
+        db.session.query(func.count(func.distinct(City.province)))
+        .filter(City.province.isnot(None))
+        .scalar()
+        or 0
+    )
+    city_count = db.session.query(func.count(func.distinct(District.city_id))).scalar() or 0
+    district_count = db.session.query(func.count(func.distinct(Property.district_id))).scalar() or 0
+
+    top = (
+        db.session.query(City.name, func.count(Property.id).label("c"))
+        .select_from(Property)
+        .join(District, Property.district_id == District.id)
+        .join(City, District.city_id == City.id)
+        .group_by(City.id)
+        .order_by(func.count(Property.id).desc())
+        .limit(10)
+        .all()
+    )
+    top_cities = [{"name": normalize_name(n), "value": int(c)} for n, c in top]
+
+    order = ["1室", "2室", "3室", "4室+"]
+    buckets = {k: 0 for k in order}
+    for rooms, c in db.session.query(Property.rooms, func.count(Property.id)).group_by(Property.rooms).all():
+        buckets[_rooms_bucket(rooms)] += int(c)
+    room_dist = [{"name": k, "value": buckets[k]} for k in order if buckets[k]]
+
+    return {
+        "count": int(total),
+        "avg_price": round(avg_price or 0),
+        "province_count": int(province_count),
+        "city_count": int(city_count),
+        "district_count": int(district_count),
+        "top_cities": top_cities,
+        "room_dist": room_dist,
+    }
+
+
+def real_provinces() -> list[dict]:
+    """各省真实房源数 + 均价 + 城市数 + 商圈数，按房源数降序（全国地图着色 + 排行）。"""
+    rows = (
+        db.session.query(
+            City.province,
+            func.count(Property.id),
+            func.avg(Property.unit_price),
+            func.count(func.distinct(City.id)),
+            func.count(func.distinct(District.id)),
+        )
+        .select_from(Property)
+        .join(District, Property.district_id == District.id)
+        .join(City, District.city_id == City.id)
+        .filter(City.province.isnot(None))
+        .group_by(City.province)
+        .order_by(func.count(Property.id).desc())
+        .all()
+    )
+    return [
+        {
+            "name": normalize_name(prov),
+            "count": int(cnt),
+            "avg_price": round(avg or 0),
+            "city_count": int(cc),
+            "district_count": int(dc),
+            "rank": i,
+        }
+        for i, (prov, cnt, avg, cc, dc) in enumerate(rows, 1)
+    ]
+
+
+def real_cities(province: str) -> list[dict]:
+    """某省下属城市真实房源数 + 均价 + 商圈数（省级地图着色 + 城市排行）。"""
+    key = normalize_name(province)
+    rows = (
+        db.session.query(
+            City.name,
+            City.province,
+            func.count(Property.id),
+            func.avg(Property.unit_price),
+            func.count(func.distinct(District.id)),
+        )
+        .select_from(Property)
+        .join(District, Property.district_id == District.id)
+        .join(City, District.city_id == City.id)
+        .group_by(City.id)
+        .all()
+    )
+    out = [
+        {
+            "name": normalize_name(name),
+            "count": int(cnt),
+            "avg_price": round(avg or 0),
+            "district_count": int(dc),
+        }
+        for name, prov, cnt, avg, dc in rows
+        if normalize_name(prov) == key
+    ]
+    return sorted(out, key=lambda x: x["count"], reverse=True)
+
+
+def real_districts(city: str) -> list[dict]:
+    """某城市行政区真实房源数 + 均价（市级地图着色 + 行政区排行）。
+
+    Shandong imported data stores business areas as ``District.name``. For city
+    maps, aggregate those business areas back to administrative districts using
+    the raw TSV's ``region`` column so labels match DataV boundaries.
+    """
+    key = normalize_name(city)
+    area_to_admin = _business_area_admin_map()
+    rows = (
+        db.session.query(
+            District.name,
+            City.name,
+            func.count(Property.id),
+            func.avg(Property.unit_price),
+            func.sum(Property.unit_price),
+            func.count(func.distinct(District.id)),
+        )
+        .select_from(Property)
+        .join(District, Property.district_id == District.id)
+        .join(City, District.city_id == City.id)
+        .group_by(District.id)
+        .all()
+    )
+    agg: dict[str, dict] = {}
+    for dname, cname, cnt, avg, price_sum, business_count in rows:
+        if normalize_name(cname) != key:
+            continue
+        admin = area_to_admin.get((key, normalize_name(dname)), dname)
+        item = agg.setdefault(
+            admin,
+            {"name": admin, "count": 0, "price_sum": 0.0, "district_count": 0},
+        )
+        item["count"] += int(cnt)
+        item["price_sum"] += float(price_sum or 0)
+        item["district_count"] += int(business_count or 0)
+
+    out = []
+    for item in agg.values():
+        count = item["count"]
+        out.append({
+            "name": item["name"],
+            "count": count,
+            "avg_price": round(item["price_sum"] / count) if count else 0,
+            "district_count": item["district_count"],
+        })
+    return sorted(out, key=lambda x: x["count"], reverse=True)

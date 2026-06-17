@@ -1,0 +1,21 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+backend/.env
+backend/housing.db
+*.sqlite3
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.env.local
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

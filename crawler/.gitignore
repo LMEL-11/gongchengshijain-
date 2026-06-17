@@ -1,0 +1,11 @@
+# 敏感：浏览器登录态 Cookie，切勿提交！
+cookies.txt
+
+# Scrapy / Python 运行产物
+httpcache/
+__pycache__/
+*.pyc
+out/
+
+# 运行日志
+*.log

@@ -1,0 +1,468 @@
+<script setup>
+import { geoMercator } from '@/utils/projection'
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+
+import { fetchArea, normalizeName } from '@/utils/geo'
+
+const props = defineProps({
+  // { 规范化区域名: 数值 }，用于给区域着色
+  dataMap: { type: Object, default: () => ({}) },
+  valueLabel: { type: String, default: '二手房挂牌量' },
+  unit: { type: String, default: '套' },
+})
+const emit = defineEmits(['levelchange'])
+
+const container = ref(null)
+const loading = ref(false)
+const tooltip = ref({ show: false, x: 0, y: 0, name: '', value: null, drillable: false })
+
+// --- 非响应式 Three 对象 ---
+let scene, camera, renderer, controls, raycaster, pointer
+let mapGroup = null
+let regions = [] // { group, meshes:[], capMat, meta }
+let pickMeshes = []
+let hovered = null
+let frameId = null
+let resizeObserver = null
+
+let levels = [{ adcode: 100000, name: '全国' }]
+
+const FIT = 38 // 投影适配半径
+const DEPTH = 2.4 // 立体厚度
+const RAISE = 1.6 // 悬停抬升
+const NEUTRAL = new THREE.Color('#1e3a5f')
+const LOW = new THREE.Color('#16407a')
+const HIGH = new THREE.Color('#3fe0ff')
+
+function colorFor(t) {
+  return new THREE.Color().lerpColors(LOW, HIGH, Math.max(0, Math.min(1, t)))
+}
+
+function compactValue(value) {
+  if (typeof value !== 'number') return ''
+  if (value >= 10000) {
+    const text = (value / 10000).toFixed(value >= 100000 ? 0 : 1).replace(/\.0$/, '')
+    return `${text}万${props.unit}`
+  }
+  return `${Number(value).toLocaleString()}${props.unit}`
+}
+
+function makeLabelTexture(text, value = null) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 320
+  canvas.height = 104
+  const ctx = canvas.getContext('2d')
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.shadowColor = 'rgba(0,40,80,0.9)'
+  ctx.shadowBlur = 8
+
+  const valueText = compactValue(value)
+  ctx.font = 'bold 29px "Microsoft YaHei", sans-serif'
+  ctx.fillStyle = '#eaf6ff'
+  ctx.fillText(text, 160, valueText ? 34 : 52)
+
+  if (valueText) {
+    ctx.font = 'bold 24px "Microsoft YaHei", sans-serif'
+    ctx.fillStyle = '#5fe9ff'
+    ctx.fillText(valueText, 160, 74)
+  }
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.minFilter = THREE.LinearFilter
+  return tex
+}
+
+function makeLabel(text, value = null) {
+  const tex = makeLabelTexture(text, value)
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }),
+  )
+  sprite.scale.set(8.5, 2.75, 1)
+  sprite.renderOrder = 10
+  return sprite
+}
+
+function updateLabel(meta) {
+  if (!meta.label) return
+  const key = `${meta.name}:${meta.value ?? ''}`
+  if (meta.labelKey === key) return
+  const oldMap = meta.label.material.map
+  meta.label.material.map = makeLabelTexture(meta.name, meta.value)
+  meta.label.material.needsUpdate = true
+  oldMap?.dispose?.()
+  meta.labelKey = key
+}
+
+function disposeMap() {
+  if (!mapGroup) return
+  mapGroup.traverse((o) => {
+    o.geometry?.dispose?.()
+    if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose())
+    else if (o.material) {
+      o.material.map?.dispose?.()
+      o.material.dispose()
+    }
+  })
+  scene.remove(mapGroup)
+  mapGroup = null
+  regions = []
+  pickMeshes = []
+  hovered = null
+}
+
+function buildMap(features) {
+  disposeMap()
+  const projection = geoMercator().fitExtent(
+    [
+      [-FIT, -FIT],
+      [FIT, FIT],
+    ],
+    { type: 'FeatureCollection', features },
+  )
+  const project = ([lng, lat]) => {
+    const p = projection([lng, lat])
+    return [p[0], -p[1]]
+  }
+
+  mapGroup = new THREE.Group()
+  mapGroup.rotation.x = -Math.PI / 2 // 平铺：局部 z -> 世界 +y（高度）
+
+  const sideMat = new THREE.MeshStandardMaterial({
+    color: '#0c2747',
+    metalness: 0.4,
+    roughness: 0.55,
+  })
+  const outlineMat = new THREE.LineBasicMaterial({ color: '#5fe9ff', transparent: true, opacity: 0.9 })
+
+  for (const feature of features) {
+    const polygons =
+      feature.geometry.type === 'Polygon'
+        ? [feature.geometry.coordinates]
+        : feature.geometry.coordinates
+
+    const group = new THREE.Group()
+    const capMat = new THREE.MeshStandardMaterial({
+      color: NEUTRAL.clone(),
+      metalness: 0.25,
+      roughness: 0.7,
+    })
+    const meta = {
+      name: feature.properties.name,
+      normName: normalizeName(feature.properties.name),
+      adcode: feature.properties.adcode,
+      childrenNum: feature.properties.childrenNum ?? 0,
+      value: null,
+      group,
+      label: null,
+      labelKey: '',
+    }
+    const meshes = []
+
+    for (const poly of polygons) {
+      const outer = poly[0]
+      const shape = new THREE.Shape()
+      outer.forEach((c, i) => {
+        const [x, y] = project(c)
+        i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)
+      })
+      for (let h = 1; h < poly.length; h++) {
+        const path = new THREE.Path()
+        poly[h].forEach((c, i) => {
+          const [x, y] = project(c)
+          i === 0 ? path.moveTo(x, y) : path.lineTo(x, y)
+        })
+        shape.holes.push(path)
+      }
+
+      const geom = new THREE.ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: false })
+      const mesh = new THREE.Mesh(geom, [capMat, sideMat]) // 0=顶/底面 1=侧壁
+      mesh.userData.meta = meta
+      group.add(mesh)
+      meshes.push(mesh)
+      pickMeshes.push(mesh)
+
+      // 顶部发光轮廓
+      const pts = outer.map((c) => {
+        const [x, y] = project(c)
+        return new THREE.Vector3(x, y, DEPTH + 0.02)
+      })
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), outlineMat)
+      line.raycast = () => {}
+      group.add(line)
+    }
+
+    // 标签置于质心上方
+    const c = feature.properties.centroid || feature.properties.center
+    if (c) {
+      const [lx, ly] = project(c)
+      const label = makeLabel(feature.properties.name)
+      label.position.set(lx, ly, DEPTH + 0.8)
+      meta.label = label
+      group.add(label)
+    }
+
+    meta.capMat = capMat
+    meta.meshes = meshes
+    regions.push(meta)
+    mapGroup.add(group)
+  }
+
+  scene.add(mapGroup)
+  applyColors()
+  controls.target.set(0, 0, 0)
+}
+
+// 依据 dataMap 给区域着色
+function applyColors() {
+  if (!regions.length) return
+  const values = regions
+    .map((r) => props.dataMap[r.normName] ?? props.dataMap[r.name])
+    .filter((v) => typeof v === 'number')
+  const min = values.length ? Math.min(...values) : 0
+  const max = values.length ? Math.max(...values) : 1
+  const span = max - min || 1
+  for (const r of regions) {
+    const v = props.dataMap[r.normName] ?? props.dataMap[r.name]
+    r.value = typeof v === 'number' ? v : null
+    r.capMat.color.copy(r.value == null ? NEUTRAL : colorFor((r.value - min) / span))
+    updateLabel(r)
+  }
+}
+
+function setHover(meta) {
+  hovered = meta
+  meta.capMat.emissive = new THREE.Color('#1d6fa5')
+  meta.capMat.emissiveIntensity = 0.6
+}
+function clearHover() {
+  if (hovered) {
+    hovered.capMat.emissive = new THREE.Color('#000000')
+    hovered = null
+  }
+}
+
+function onPointerMove(e) {
+  const rect = renderer.domElement.getBoundingClientRect()
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+  raycaster.setFromCamera(pointer, camera)
+  const hits = raycaster.intersectObjects(pickMeshes, false)
+  if (hits.length) {
+    const meta = hits[0].object.userData.meta
+    if (hovered !== meta) {
+      clearHover()
+      setHover(meta)
+    }
+    tooltip.value = {
+      show: true,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      name: meta.name,
+      value: meta.value,
+      drillable: meta.childrenNum > 0,
+    }
+    renderer.domElement.style.cursor = meta.childrenNum > 0 ? 'pointer' : 'default'
+  } else {
+    clearHover()
+    tooltip.value.show = false
+    renderer.domElement.style.cursor = 'grab'
+  }
+}
+
+function onClick() {
+  if (hovered && hovered.childrenNum > 0) {
+    navigate([...levels, { adcode: hovered.adcode, name: hovered.name }])
+  }
+}
+
+async function navigate(newLevels) {
+  levels = newLevels
+  const cur = levels[levels.length - 1]
+  loading.value = true
+  try {
+    const geo = await fetchArea(cur.adcode)
+    buildMap(geo.features)
+    emit('levelchange', { adcode: cur.adcode, name: cur.name, path: levels.map((l) => ({ ...l })) })
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+function back() {
+  if (levels.length > 1) navigate(levels.slice(0, -1))
+}
+function goToLevel(i) {
+  if (i >= 0 && i < levels.length - 1) navigate(levels.slice(0, i + 1))
+}
+function reset() {
+  navigate([{ adcode: 100000, name: '全国' }])
+}
+defineExpose({ back, goToLevel, reset })
+
+function animate() {
+  frameId = requestAnimationFrame(animate)
+  // 悬停区域平滑抬升
+  for (const r of regions) {
+    const target = r === hovered ? RAISE : 0
+    r.group.position.z += (target - r.group.position.z) * 0.18
+  }
+  controls.update()
+  renderer.render(scene, camera)
+}
+
+function onResize() {
+  const el = container.value
+  if (!el || !renderer) return
+  camera.aspect = el.clientWidth / el.clientHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(el.clientWidth, el.clientHeight)
+}
+
+function initThree() {
+  const el = container.value
+  const w = el.clientWidth
+  const h = el.clientHeight || 600
+
+  scene = new THREE.Scene()
+  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000)
+  camera.position.set(0, 60, 64)
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setSize(w, h)
+  renderer.setClearColor(0x000000, 0) // 透明，露出大屏背景
+  el.appendChild(renderer.domElement)
+
+  controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableDamping = true
+  controls.dampingFactor = 0.08
+  controls.minDistance = 28
+  controls.maxDistance = 180
+  controls.maxPolarAngle = Math.PI / 2.1
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9))
+  const key = new THREE.DirectionalLight(0xa9d8ff, 0.8)
+  key.position.set(10, 80, 40)
+  scene.add(key)
+
+  raycaster = new THREE.Raycaster()
+  pointer = new THREE.Vector2()
+
+  renderer.domElement.addEventListener('pointermove', onPointerMove)
+  renderer.domElement.addEventListener('click', onClick)
+  renderer.domElement.addEventListener('pointerleave', () => {
+    tooltip.value.show = false
+    clearHover()
+  })
+  resizeObserver = new ResizeObserver(onResize)
+  resizeObserver.observe(el)
+
+  animate()
+  navigate(levels) // 初始加载全国
+}
+
+onMounted(initThree)
+watch(() => props.dataMap, applyColors, { deep: true })
+
+onBeforeUnmount(() => {
+  if (frameId) cancelAnimationFrame(frameId)
+  resizeObserver?.disconnect()
+  renderer?.domElement.removeEventListener('pointermove', onPointerMove)
+  renderer?.domElement.removeEventListener('click', onClick)
+  disposeMap()
+  renderer?.dispose()
+  if (renderer?.domElement && container.value?.contains(renderer.domElement)) {
+    container.value.removeChild(renderer.domElement)
+  }
+  scene = camera = renderer = controls = raycaster = pointer = null
+})
+
+const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString())
+</script>
+
+<template>
+  <div class="geo-map">
+    <div ref="container" class="canvas-host"></div>
+
+    <div v-if="loading" class="overlay">
+      <span class="spin"></span> 地图加载中…
+    </div>
+
+    <div
+      v-show="tooltip.show"
+      class="tip"
+      :style="{ left: tooltip.x + 16 + 'px', top: tooltip.y + 16 + 'px' }"
+    >
+      <div class="tip-name">{{ tooltip.name }}</div>
+      <div class="tip-row">{{ valueLabel }}：<b>{{ fmt(tooltip.value) }}</b> {{ unit }}</div>
+      <div v-if="tooltip.drillable" class="tip-hint">▸ 点击下钻</div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.geo-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.canvas-host {
+  width: 100%;
+  height: 100%;
+}
+.overlay {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #9fd6ff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spin {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(95, 233, 255, 0.3);
+  border-top-color: #5fe9ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.tip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(7, 25, 50, 0.92);
+  border: 1px solid rgba(95, 233, 255, 0.5);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #dbeeff;
+  font-size: 13px;
+  z-index: 5;
+  min-width: 150px;
+}
+.tip-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.tip-row b {
+  color: #5fe9ff;
+  font-size: 15px;
+}
+.tip-hint {
+  margin-top: 4px;
+  color: #ffd166;
+}
+</style>
