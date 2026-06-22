@@ -130,6 +130,55 @@ def _clean_text(value: str) -> str:
     return value
 
 
+_CHONGQING_AREA_ADMIN = {
+    "西永": "沙坪坝区",
+    "大学城": "沙坪坝区",
+    "陈家桥": "沙坪坝区",
+    "天星桥": "沙坪坝区",
+    "小龙坎": "沙坪坝区",
+    "沙正街": "沙坪坝区",
+    "龙洲湾": "巴南区",
+    "李家沱": "巴南区",
+    "鱼洞": "巴南区",
+    "鹿角": "巴南区",
+    "融汇半岛": "巴南区",
+    "南坪": "南岸区",
+    "融侨半岛": "南岸区",
+    "茶园新区": "南岸区",
+    "弹子石": "南岸区",
+    "杨家坪": "九龙坡区",
+    "石坪桥": "九龙坡区",
+    "彩云湖": "九龙坡区",
+    "马王乡": "九龙坡区",
+    "黄桷坪": "九龙坡区",
+    "九宫庙": "大渡口区",
+    "双山": "大渡口区",
+    "北滨路": "江北区",
+    "海尔路": "江北区",
+    "南桥寺": "江北区",
+    "石子山": "江北区",
+    "鱼嘴": "江北区",
+    "两路口": "渝中区",
+    "大溪沟": "渝中区",
+    "中央公园": "渝北区",
+    "中央公园东区": "渝北区",
+    "悦来": "渝北区",
+    "汽博中心": "渝北区",
+    "礼嘉": "渝北区",
+    "空港新城": "渝北区",
+    "黄泥磅": "渝北区",
+    "龙兴": "渝北区",
+    "龙溪": "渝北区",
+    "鸳鸯": "渝北区",
+    "大竹林": "渝北区",
+    "蔡家": "北碚区",
+    "璧山": "璧山区",
+    "双福新区": "江津区",
+    "周家坝": "万州区",
+    "桃花新城": "长寿区",
+}
+
+
 @lru_cache(maxsize=1)
 def _business_area_admin_map() -> dict[tuple[str, str], str]:
     """Map (city, business area) to administrative district from raw TSV.
@@ -141,23 +190,29 @@ def _business_area_admin_map() -> dict[tuple[str, str], str]:
     detail records.
     """
     mapping: dict[tuple[str, str], dict[str, int]] = {}
-    if not HOUSE_INFO_FILE.exists():
-        return {}
 
-    with open(HOUSE_INFO_FILE, encoding="utf-8-sig", newline="") as f:
-        for row in csv.DictReader(f, delimiter="\t"):
-            city = normalize_name(_clean_text(row.get("city", "")))
-            business_area = normalize_name(_clean_text(row.get("quyu", "")))
-            admin = _clean_text(row.get("region", ""))
-            if not city or not business_area or not admin:
-                continue
-            bucket = mapping.setdefault((city, business_area), {})
-            bucket[admin] = bucket.get(admin, 0) + 1
+    if HOUSE_INFO_FILE.exists():
+        with open(HOUSE_INFO_FILE, encoding="utf-8-sig", newline="") as f:
+            for row in csv.DictReader(f, delimiter="\t"):
+                city = normalize_name(_clean_text(row.get("city", "")))
+                business_area = normalize_name(_clean_text(row.get("quyu", "")))
+                admin = _clean_text(row.get("region", ""))
+                if not city or not business_area or not admin:
+                    continue
+                bucket = mapping.setdefault((city, business_area), {})
+                bucket[admin] = bucket.get(admin, 0) + 1
 
-    return {
+    result = {
         key: max(counts.items(), key=lambda item: item[1])[0]
         for key, counts in mapping.items()
     }
+    result.update(
+        {
+            ("重庆", normalize_name(area)): admin
+            for area, admin in _CHONGQING_AREA_ADMIN.items()
+        }
+    )
+    return result
 
 
 def real_summary() -> dict:
@@ -236,6 +291,8 @@ def real_provinces() -> list[dict]:
 def real_cities(province: str) -> list[dict]:
     """某省下属城市真实房源数 + 均价 + 商圈数（省级地图着色 + 城市排行）。"""
     key = normalize_name(province)
+    if key == "重庆":
+        return real_districts("重庆")
     rows = (
         db.session.query(
             City.name,
@@ -310,3 +367,111 @@ def real_districts(city: str) -> list[dict]:
             "district_count": item["district_count"],
         })
     return sorted(out, key=lambda x: x["count"], reverse=True)
+
+
+def real_area_properties(city: str, area: str, limit: int = 800) -> dict:
+    """Property points for a city-level administrative area on the big screen."""
+    city_key = normalize_name(city)
+    area_key = normalize_name(area)
+    limit = min(max(int(limit or 800), 1), 2000)
+    area_to_admin = _business_area_admin_map()
+
+    district_rows = (
+        db.session.query(District.id, District.name, City.name)
+        .join(City, District.city_id == City.id)
+        .all()
+    )
+    district_ids = []
+    for district_id, district_name, city_name in district_rows:
+        if normalize_name(city_name) != city_key:
+            continue
+        admin = area_to_admin.get((city_key, normalize_name(district_name)), district_name)
+        if normalize_name(admin) == area_key:
+            district_ids.append(district_id)
+
+    if not district_ids:
+        return _empty_area_payload(city, area)
+
+    total = (
+        db.session.query(func.count(Property.id))
+        .filter(Property.district_id.in_(district_ids))
+        .scalar()
+        or 0
+    )
+    avg_price = (
+        db.session.query(func.avg(Property.unit_price))
+        .filter(Property.district_id.in_(district_ids), Property.unit_price.isnot(None))
+        .scalar()
+        or 0
+    )
+    coordinate_count = (
+        db.session.query(func.count(Property.id))
+        .filter(
+            Property.district_id.in_(district_ids),
+            Property.lng.isnot(None),
+            Property.lat.isnot(None),
+        )
+        .scalar()
+        or 0
+    )
+    center = (
+        db.session.query(func.avg(Property.lng), func.avg(Property.lat))
+        .filter(
+            Property.district_id.in_(district_ids),
+            Property.lng.isnot(None),
+            Property.lat.isnot(None),
+        )
+        .first()
+    )
+    rows = (
+        db.session.query(Property)
+        .filter(
+            Property.district_id.in_(district_ids),
+            Property.lng.isnot(None),
+            Property.lat.isnot(None),
+        )
+        .order_by(Property.unit_price.desc(), Property.id.asc())
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "city": normalize_name(city),
+        "area": area,
+        "property_count": int(total),
+        "coordinate_count": int(coordinate_count),
+        "returned_count": len(rows),
+        "avg_price": round(avg_price or 0),
+        "center": {
+            "lng": round(center[0], 6) if center and center[0] is not None else None,
+            "lat": round(center[1], 6) if center and center[1] is not None else None,
+        },
+        "items": [_property_point(p) for p in rows],
+    }
+
+
+def _empty_area_payload(city: str, area: str) -> dict:
+    return {
+        "city": normalize_name(city),
+        "area": area,
+        "property_count": 0,
+        "coordinate_count": 0,
+        "returned_count": 0,
+        "avg_price": 0,
+        "center": {"lng": None, "lat": None},
+        "items": [],
+    }
+
+
+def _property_point(prop: Property) -> dict:
+    return {
+        "id": prop.id,
+        "title": prop.title,
+        "district_name": prop.district.name if prop.district else None,
+        "total_price": prop.total_price,
+        "unit_price": prop.unit_price,
+        "area": prop.area,
+        "layout": prop.layout(),
+        "lng": prop.lng,
+        "lat": prop.lat,
+    }

@@ -45,7 +45,7 @@ const bare = computed(() => route.name === 'screen')
     </main>
 
     <footer v-if="!bare" class="app-footer">
-      智慧房源探索平台 · Flask + Vue 3 + Three.js · 数据为合成演示数据
+      智慧房源探索平台 · Flask + Vue 3 + Three.js
     </footer>
   </div>
 </template>

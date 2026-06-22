@@ -40,6 +40,14 @@ def price_trend():
     return ok(analysis.price_trend(district_id))
 
 
+@bp.get("/listing-profile")
+def listing_profile():
+    district_id = get_int("district_id")
+    if not district_id:
+        return ok({})
+    return ok(analysis.listing_profile(district_id))
+
+
 @bp.post("/predict")
 def predict():
     payload = request.get_json(silent=True) or {}

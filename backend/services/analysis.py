@@ -1,6 +1,6 @@
 """Analysis services: aggregate statistics used by the dashboard & charts."""
-from collections import defaultdict
-from datetime import timedelta
+from collections import Counter, defaultdict
+from datetime import date, timedelta
 from math import log1p
 from statistics import median
 
@@ -94,6 +94,107 @@ def price_trend(district_id: int) -> list[dict]:
         .all()
     )
     return [r.to_dict() for r in rows]
+
+
+def listing_profile(district_id: int) -> dict:
+    """Current listing snapshot and transaction-attribute profile for a district."""
+    rows = (
+        db.session.query(
+            Property.unit_price,
+            Property.total_price,
+            Property.area,
+            Property.source_url,
+        )
+        .filter(Property.district_id == district_id)
+        .all()
+    )
+    prices = [float(r.unit_price) for r in rows if r.unit_price]
+    totals = [float(r.total_price) for r in rows if r.total_price]
+    areas = [float(r.area) for r in rows if r.area]
+
+    listing_dates = []
+    monthly_counts = Counter()
+    monthly_prices = defaultdict(list)
+    ownership_counter = Counter()
+    right_counter = Counter()
+    mortgage_counter = Counter()
+    tax_tags = Counter()
+    detail_count = 0
+
+    for row in rows:
+        detail = get_property_details(row.source_url)
+        if not detail:
+            continue
+        detail_count += 1
+
+        listing_date = _parse_listing_date(detail.get("listing_date"))
+        if listing_date:
+            listing_dates.append(listing_date)
+            month = listing_date.strftime("%Y-%m")
+            monthly_counts[month] += 1
+            if row.unit_price:
+                monthly_prices[month].append(float(row.unit_price))
+
+        _count_clean(ownership_counter, detail.get("ownership_type"))
+        _count_clean(right_counter, detail.get("property_right"))
+
+        mortgage = _normalize_mortgage(detail.get("mortgage"))
+        if mortgage:
+            mortgage_counter[mortgage] += 1
+
+        selling_point = detail.get("selling_point") or ""
+        if "满五" in selling_point:
+            tax_tags["满五"] += 1
+        if any(token in selling_point for token in ("满二", "满两", "证满二", "证满两")):
+            tax_tags["满二"] += 1
+        if any(token in selling_point for token in ("有证", "房产证", "产权证")):
+            tax_tags["有证"] += 1
+
+    latest_month = None
+    monthly = []
+    if listing_dates:
+        latest = max(listing_dates)
+        latest_month = date(latest.year, latest.month, 1)
+        for month_date in _month_window(latest_month, 24):
+            month = month_date.strftime("%Y-%m")
+            month_prices = monthly_prices.get(month, [])
+            monthly.append(
+                {
+                    "month": month,
+                    "count": int(monthly_counts.get(month, 0)),
+                    "avg_unit_price": (
+                        round(sum(month_prices) / len(month_prices))
+                        if month_prices
+                        else None
+                    ),
+                }
+            )
+
+    recent_ratio = 0
+    if listing_dates:
+        latest = max(listing_dates)
+        recent_cutoff = latest - timedelta(days=365)
+        recent_ratio = sum(1 for item in listing_dates if item >= recent_cutoff) / len(
+            listing_dates
+        )
+
+    return {
+        "district_id": district_id,
+        "property_count": len(rows),
+        "detail_count": detail_count,
+        "date_count": len(listing_dates),
+        "avg_unit_price": _rounded_average(prices),
+        "median_unit_price": round(median(prices)) if prices else 0,
+        "avg_total_price": _rounded_average(totals, digits=1),
+        "avg_area": _rounded_average(areas, digits=1),
+        "as_of_month": latest_month.strftime("%Y-%m") if latest_month else None,
+        "recent_listing_ratio": round(recent_ratio * 100, 1),
+        "monthly_listings": monthly,
+        "ownership_distribution": _counter_items(ownership_counter),
+        "property_right_distribution": _counter_items(right_counter),
+        "mortgage_distribution": _counter_items(mortgage_counter),
+        "tax_tags": _counter_items(tax_tags, total=detail_count),
+    }
 
 
 def investment_ranking(city_id: int) -> list[dict]:
@@ -300,3 +401,50 @@ def _parse_listing_date(value):
         except ValueError:
             continue
     return None
+
+
+def _rounded_average(values, digits=0):
+    if not values:
+        return 0
+    value = sum(values) / len(values)
+    return round(value, digits) if digits else round(value)
+
+
+def _count_clean(counter, value):
+    text = (value or "").strip()
+    if text:
+        counter[text] += 1
+
+
+def _normalize_mortgage(value):
+    text = (value or "").strip()
+    if not text:
+        return None
+    if "无抵押" in text:
+        return "无抵押"
+    if "抵押" in text:
+        return "有抵押"
+    return text[:16]
+
+
+def _counter_items(counter, total=None, limit=8):
+    denominator = total or sum(counter.values())
+    if not denominator:
+        return []
+    return [
+        {
+            "name": name,
+            "count": int(count),
+            "ratio": round(count / denominator * 100, 1),
+        }
+        for name, count in counter.most_common(limit)
+    ]
+
+
+def _month_window(end_month, count):
+    return [_shift_months(end_month, offset) for offset in range(1 - count, 1)]
+
+
+def _shift_months(month, offset):
+    month_index = month.year * 12 + month.month - 1 + offset
+    return date(month_index // 12, month_index % 12 + 1, 1)

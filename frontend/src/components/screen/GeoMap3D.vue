@@ -11,12 +11,21 @@ const props = defineProps({
   dataMap: { type: Object, default: () => ({}) },
   valueLabel: { type: String, default: '二手房挂牌量' },
   unit: { type: String, default: '套' },
+  leafClickLabel: { type: String, default: '' },
 })
-const emit = defineEmits(['levelchange'])
+const emit = defineEmits(['levelchange', 'regionclick'])
 
 const container = ref(null)
 const loading = ref(false)
-const tooltip = ref({ show: false, x: 0, y: 0, name: '', value: null, drillable: false })
+const tooltip = ref({
+  show: false,
+  x: 0,
+  y: 0,
+  name: '',
+  value: null,
+  drillable: false,
+  leafHint: '',
+})
 
 // --- 非响应式 Three 对象 ---
 let scene, camera, renderer, controls, raycaster, pointer
@@ -263,8 +272,9 @@ function onPointerMove(e) {
       name: meta.name,
       value: meta.value,
       drillable: meta.childrenNum > 0,
+      leafHint: meta.childrenNum > 0 ? '' : props.leafClickLabel,
     }
-    renderer.domElement.style.cursor = meta.childrenNum > 0 ? 'pointer' : 'default'
+    renderer.domElement.style.cursor = meta.childrenNum > 0 || props.leafClickLabel ? 'pointer' : 'default'
   } else {
     clearHover()
     tooltip.value.show = false
@@ -273,8 +283,19 @@ function onPointerMove(e) {
 }
 
 function onClick() {
-  if (hovered && hovered.childrenNum > 0) {
+  if (!hovered) return
+  if (hovered.childrenNum > 0) {
     navigate([...levels, { adcode: hovered.adcode, name: hovered.name }])
+    return
+  }
+  if (props.leafClickLabel) {
+    emit('regionclick', {
+      name: hovered.name,
+      normName: hovered.normName,
+      adcode: hovered.adcode,
+      value: hovered.value,
+      path: levels.map((l) => ({ ...l })),
+    })
   }
 }
 
@@ -401,6 +422,7 @@ const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString())
       <div class="tip-name">{{ tooltip.name }}</div>
       <div class="tip-row">{{ valueLabel }}：<b>{{ fmt(tooltip.value) }}</b> {{ unit }}</div>
       <div v-if="tooltip.drillable" class="tip-hint">▸ 点击下钻</div>
+      <div v-else-if="tooltip.leafHint" class="tip-hint">▸ {{ tooltip.leafHint }}</div>
     </div>
   </div>
 </template>

@@ -3,7 +3,7 @@ from flask import Blueprint, request
 
 from services import national
 
-from .utils import ok
+from .utils import get_int, ok
 
 bp = Blueprint("national", __name__, url_prefix="/api/national")
 
@@ -49,3 +49,12 @@ def real_cities():
 def real_districts():
     """某城市各商圈真实房源数（市级下钻侧栏排行）。"""
     return ok(national.real_districts(request.args.get("city", "")))
+
+
+@bp.get("/real/area-properties")
+def real_area_properties():
+    """某城市行政区内可定位房源点（用于大屏内嵌百度地图）。"""
+    city = request.args.get("city", "")
+    area = request.args.get("area", "")
+    limit = get_int("limit", 800)
+    return ok(national.real_area_properties(city, area, limit=limit))

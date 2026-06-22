@@ -20,6 +20,8 @@ export const getInvestmentRanking = (cityId) =>
   request.get('/stats/investment', { params: { city_id: cityId } })
 export const getPriceTrend = (districtId) =>
   request.get('/stats/price-trend', { params: { district_id: districtId } })
+export const getListingProfile = (districtId) =>
+  request.get('/stats/listing-profile', { params: { district_id: districtId } })
 export const predictPrice = (payload) => request.post('/stats/predict', payload)
 
 // --- 全国二手房（大屏） ---
@@ -32,3 +34,5 @@ export const getRealSummary = () => request.get('/national/real/summary')
 export const getRealProvinces = () => request.get('/national/real/provinces')
 export const getRealCities = (province) => request.get('/national/real/cities', { params: { province } })
 export const getRealDistricts = (city) => request.get('/national/real/districts', { params: { city } })
+export const getRealAreaProperties = (params) =>
+  request.get('/national/real/area-properties', { params })

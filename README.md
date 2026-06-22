@@ -11,6 +11,7 @@
 ## ✨ 功能特性
 
 - **3D 房价地图**：基于 Three.js，将各行政区渲染为立体柱体，柱体高度与颜色映射区域均价，支持旋转、缩放、悬停查看、点击下钻。
+- **全国大屏房源点**：大屏下钻到城市级后，可在区/县弹层中查看百度地图房源分布；右侧“地图房源”列表支持定位地图点，并通过“详情”进入房源详情页。
 - **房源探索**：多条件筛选（城市 / 行政区 / 户型 / 总价区间 / 关键词）、排序、分页浏览，查看房源详情。
 - **周边配套**：房源详情页展示从山东原始文本抽取的学校、医院、交通、商场、公园等区/商圈级配套标签。
 - **交易属性**：山东房源详情页展示挂牌时间、交易权属、产权情况、抵押信息、核心卖点、小区介绍、户型介绍、交通出行等原始字段。
@@ -105,10 +106,15 @@ env PYTHONDONTWRITEBYTECODE=1 ../.venv/bin/python import_shandong_facilities.py 
 ```bash
 cd frontend
 npm install                  # 首次
+# 如需在大屏市级区县页显示百度地图房源点：
+# cp .env.example .env.local
+# 然后在 .env.local 填入 VITE_BAIDU_MAP_AK
 npm run dev                  # 启动开发服务器 http://localhost:5173
 ```
 
 浏览器打开 **http://localhost:5173** 即可。前端通过 Vite 代理把 `/api` 请求转发到 `http://127.0.0.1:5000`，无需额外处理跨域。
+
+大屏地图使用路径：进入首页 `/`，按“全国 → 省 → 市”下钻；到城市级后点击区/县会打开百度地图房源弹层。弹层左侧地图展示点位，右侧“地图房源”列表点击房源内容可定位 marker，点击“详情”会跳转到 `/property/{id}` 房源详情页。
 
 生产构建：`npm run build`（产物在 `frontend/dist/`）。
 
@@ -130,12 +136,14 @@ npm run dev                  # 启动开发服务器 http://localhost:5173
 | GET | `/api/stats/price-distribution?city_id=` | 单价分布直方图 |
 | GET | `/api/stats/investment?city_id=` | 各区投资评分排行 |
 | GET | `/api/stats/price-trend?district_id=` | 房价走势 |
+| GET | `/api/stats/listing-profile?district_id=` | 区域挂牌画像（挂牌月份、均价、交易属性结构） |
 | POST | `/api/stats/predict` | 房价预测（body 见下） |
 | POST | `/api/stats/predict/retrain` | 强制重训模型（可传 `district_id`） |
 | GET | `/api/national/real/summary` | 当前真实库总览 |
 | GET | `/api/national/real/provinces` | 省级真实房源聚合 |
 | GET | `/api/national/real/cities?province=` | 某省城市真实房源聚合 |
 | GET | `/api/national/real/districts?city=` | 某市行政区/商圈真实房源聚合 |
+| GET | `/api/national/real/area-properties?city=&area=&limit=` | 某市某区县可定位房源点（大屏内嵌百度地图；返回项含房源 `id`，用于跳转详情） |
 
 **房源筛选参数**：`city_id, district_id, listing_type, rooms, keyword, min_total_price, max_total_price, min_unit_price, max_unit_price, sort(price_asc|price_desc|unit_asc|unit_desc|area_desc|newest), page, page_size`
 
@@ -165,6 +173,7 @@ python -m spider.example_spider   # 演示：解析示例 HTML 并入库
 
 - 当前 MySQL 数据规模：**126002 条房源 / 139 城 / 2488 个区或商圈**，其中 `shandong_house_info` 121617 条、`lianjia` 4385 条。
 - 山东原始数据以商圈字段入库，大屏市级下钻会根据 `house_info.tsv` 中 `region/quyu` 映射，把商圈房源数汇总到行政区；区/县/市后缀做了规范化，并保护 `单县`、`曹县` 这类名称不被误截断。
+- 大屏下钻到城市级后，点击区/县会在当前大屏内显示百度地图房源点；右侧列表可点击“详情”进入对应房源详情页；需在 `frontend/.env.local` 配置 `VITE_BAIDU_MAP_AK`。
 - 周边配套不是逐房源 POI 坐标，而是由山东 `maidian/jieshao/huxingjieshao/jiaotong` 文本抽取后按区/商圈汇总的设施标签，目前写入 `facilities` 表 4513 条。
 - 山东房源详情的交易属性由 `services/property_details.py` 按 `source_url` 从原始 TSV 查询，未改动 `properties` 表结构。
 - 投资热点评分已改为当前快照可支撑的五项指标：价格洼地 35%、市场热度 25%、周边配套 20%、交易安全 10%、挂牌新鲜度 10%，不再使用无法确认的近期涨幅。

@@ -1,7 +1,14 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { getRealCities, getRealDistricts, getRealProvinces, getRealSummary } from '@/api'
+import {
+  getRealAreaProperties,
+  getRealCities,
+  getRealDistricts,
+  getRealProvinces,
+  getRealSummary,
+} from '@/api'
+import BaiduPropertyMap from '@/components/screen/BaiduPropertyMap.vue'
 import Donut from '@/components/screen/Donut.vue'
 import GeoMap3D from '@/components/screen/GeoMap3D.vue'
 import RankBar from '@/components/screen/RankBar.vue'
@@ -9,6 +16,7 @@ import ScreenPanel from '@/components/screen/ScreenPanel.vue'
 import { useAutoFit } from '@/composables/useAutoFit'
 import { normalizeName } from '@/utils/geo'
 
+const MUNICIPALITIES = new Set(['北京', '北京市', '上海', '上海市', '天津', '天津市', '重庆', '重庆市'])
 const { scale, designW, designH } = useAutoFit()
 
 const mapRef = ref(null)
@@ -16,8 +24,17 @@ const summary = ref({})
 const rankData = ref([]) // 当前层级行：省份列表 / 某省城市列表
 const path = ref([{ adcode: 100000, name: '全国' }])
 const clock = ref('')
+const baiduVisible = ref(false)
+const baiduLoading = ref(false)
+const baiduPayload = ref({})
+const baiduTitle = ref('')
+const baiduAddress = ref('')
 
 const level = computed(() => path.value.length) // 1 全国 / 2 省 / 3 市
+const isMunicipalityLevel = computed(
+  () => level.value === 2 && MUNICIPALITIES.has(path.value[1]?.name),
+)
+const isDistrictMapLevel = computed(() => level.value >= 3 || isMunicipalityLevel.value)
 const stageStyle = computed(() => ({
   width: designW + 'px',
   height: designH + 'px',
@@ -36,11 +53,14 @@ const dataMap = computed(() => {
 
 const rankTitle = computed(() => {
   if (level.value === 1) return '省份房源数 TOP'
+  if (isMunicipalityLevel.value) return `${path.value[1]?.name} · 行政区房源数 TOP`
   if (level.value === 2) return `${path.value[1]?.name} · 城市房源数 TOP`
   return `${path.value[2]?.name} · 行政区房源数 TOP`
 })
 const priceTitle = computed(
-  () => (level.value === 1 ? '省份' : level.value === 2 ? '城市' : '行政区') + '均价 TOP（元/㎡）',
+  () =>
+    (level.value === 1 ? '省份' : level.value === 2 && !isMunicipalityLevel.value ? '城市' : '行政区') +
+    '均价 TOP（元/㎡）',
 )
 
 const roomItems = computed(() => summary.value.room_dist || [])
@@ -52,6 +72,12 @@ const priceBars = computed(() =>
 )
 const cityTop = computed(() => summary.value.top_cities || [])
 const tableRows = computed(() => rankData.value.slice(0, 14))
+const mapHint = computed(() =>
+  isDistrictMapLevel.value
+    ? '拖拽旋转 · 滚轮缩放 · 点击区县查看百度地图房源点'
+    : '拖拽旋转 · 滚轮缩放 · 点击高亮区域下钻（省 → 市）',
+)
+const leafClickLabel = computed(() => (isDistrictMapLevel.value ? '查看百度地图房源点' : ''))
 
 async function onLevelChange(ctx) {
   path.value = ctx.path
@@ -67,6 +93,35 @@ async function onLevelChange(ctx) {
 
 function crumbTo(i) {
   if (i < path.value.length - 1) mapRef.value?.goToLevel(i)
+}
+
+async function onRegionClick(region) {
+  if (!isDistrictMapLevel.value || !region?.name) return
+  const cityName = isMunicipalityLevel.value ? path.value[1]?.name : path.value[2]?.name
+  const areaPath = path.value.slice(1).map((item) => item.name)
+  baiduTitle.value = `${region.name} · 百度地图房源分布`
+  baiduAddress.value = `${areaPath.join('')}${region.name}`
+  baiduVisible.value = true
+  baiduLoading.value = true
+  baiduPayload.value = {
+    area: region.name,
+    property_count: region.value || 0,
+    coordinate_count: 0,
+    returned_count: 0,
+    avg_price: 0,
+    items: [],
+  }
+  try {
+    baiduPayload.value = await getRealAreaProperties({
+      city: cityName,
+      area: region.name,
+      limit: 800,
+    })
+  } catch (e) {
+    console.error('加载百度地图房源点失败', e)
+  } finally {
+    baiduLoading.value = false
+  }
 }
 
 const fmt = (n) => Number(n || 0).toLocaleString()
@@ -154,9 +209,16 @@ onBeforeUnmount(() => clearInterval(timer))
             <button v-if="path.length > 1" class="back" @click="mapRef?.back()">‹ 返回上级</button>
           </div>
           <div class="map-wrap">
-            <GeoMap3D ref="mapRef" :data-map="dataMap" value-label="真实房源数" @levelchange="onLevelChange" />
+            <GeoMap3D
+              ref="mapRef"
+              :data-map="dataMap"
+              value-label="真实房源数"
+              :leaf-click-label="leafClickLabel"
+              @levelchange="onLevelChange"
+              @regionclick="onRegionClick"
+            />
           </div>
-          <div class="hint">拖拽旋转 · 滚轮缩放 · 点击高亮区域下钻（省 → 市）</div>
+          <div class="hint">{{ mapHint }}</div>
         </div>
 
         <!-- 右列 -->
@@ -188,6 +250,14 @@ onBeforeUnmount(() => clearInterval(timer))
           </ScreenPanel>
         </div>
       </div>
+      <BaiduPropertyMap
+        :visible="baiduVisible"
+        :title="baiduTitle"
+        :address="baiduAddress"
+        :payload="baiduPayload"
+        :loading="baiduLoading"
+        @close="baiduVisible = false"
+      />
     </div>
   </div>
 </template>
