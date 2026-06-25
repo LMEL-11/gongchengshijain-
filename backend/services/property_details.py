@@ -54,3 +54,15 @@ def get_property_details(source_url):
     if not source_url:
         return {}
     return _details_by_url().get(source_url, {})
+
+
+def clean_detail_dict(data):
+    """Remove empty values from a transaction/detail mapping."""
+    return {k: v for k, v in (data or {}).items() if _clean_text(v)}
+
+
+def get_property_transaction_details(prop):
+    """Return admin-maintained transaction fields, falling back to raw TSV details."""
+    raw = get_property_details(prop.source_url)
+    manual = prop.transaction.to_dict() if getattr(prop, "transaction", None) else {}
+    return {**clean_detail_dict(raw), **clean_detail_dict(manual)}

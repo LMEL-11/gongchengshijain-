@@ -34,6 +34,12 @@ class Property(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     district = db.relationship("District", back_populates="properties")
+    transaction = db.relationship(
+        "PropertyTransaction",
+        back_populates="property",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def layout(self) -> str:
         """Human-readable layout, e.g. "3室2厅"."""

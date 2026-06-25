@@ -3,7 +3,7 @@ from flask import Blueprint, abort, request
 
 from extensions import db
 from models import District, Facility, Property
-from services.property_details import get_property_details
+from services.property_details import get_property_transaction_details
 
 from .utils import get_float, get_int, ok
 
@@ -84,5 +84,5 @@ def get_property(property_id: int):
     )
     data = prop.to_dict(detail=True)
     data["facilities"] = [f.to_dict() for f in facilities]
-    data["transaction"] = get_property_details(prop.source_url)
+    data["transaction"] = get_property_transaction_details(prop)
     return ok(data)

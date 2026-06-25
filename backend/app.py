@@ -60,6 +60,13 @@ def _register_cli(app: Flask) -> None:
 
         run_seed(app)
 
+    @app.cli.command("seed-users")
+    def seed_users_command():
+        """Create default admin/user accounts."""
+        from seed_users import run_seed_users
+
+        run_seed_users(app)
+
 
 # Allow `flask --app app run` and `python run.py`
 app = create_app()

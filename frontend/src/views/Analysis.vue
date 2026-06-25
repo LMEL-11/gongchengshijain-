@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import { getCityDistricts, getInvestmentRanking, getListingProfile, getPriceDistribution } from '@/api'
 import PredictionForm from '@/components/PredictionForm.vue'
+import RegionSelector from '@/components/RegionSelector.vue'
 import DistrictRankingChart from '@/components/charts/DistrictRankingChart.vue'
 import InvestmentChart from '@/components/charts/InvestmentChart.vue'
 import ListingProfileChart from '@/components/charts/ListingProfileChart.vue'
@@ -14,8 +15,14 @@ const cityId = ref(null)
 const districts = ref([])
 const distribution = ref([])
 const investment = ref([])
+const selectedProvince = ref('')
 const profileDistrictId = ref(null)
 const profile = ref(null)
+let loadingCity = false
+
+const profileDistrict = computed(() =>
+  districts.value.find((d) => d.id === profileDistrictId.value),
+)
 
 const profileStats = computed(() => {
   const p = profile.value || {}
@@ -55,25 +62,53 @@ async function loadProfile() {
 }
 
 async function loadCity() {
-  const [d, dist, inv] = await Promise.all([
-    getCityDistricts(cityId.value),
-    getPriceDistribution(cityId.value),
-    getInvestmentRanking(cityId.value),
-  ])
-  districts.value = d
-  distribution.value = dist
-  investment.value = inv
-  profileDistrictId.value = d.length ? d[0].id : null
-  await loadProfile()
+  if (!cityId.value) {
+    districts.value = []
+    distribution.value = []
+    investment.value = []
+    profileDistrictId.value = null
+    profile.value = null
+    return
+  }
+  loadingCity = true
+  try {
+    const [d, dist, inv] = await Promise.all([
+      getCityDistricts(cityId.value),
+      getPriceDistribution(cityId.value),
+      getInvestmentRanking(cityId.value),
+    ])
+    districts.value = d
+    distribution.value = dist
+    investment.value = inv
+    profileDistrictId.value = d.find((item) => item.id === profileDistrictId.value)?.id || (d.length ? d[0].id : null)
+    await loadProfile()
+  } finally {
+    loadingCity = false
+  }
+}
+
+function syncProvinceByCity(id) {
+  if (!id) return
+  const city = store.cities.find((c) => c.id === id)
+  selectedProvince.value = city?.province || ''
 }
 
 onMounted(async () => {
   await store.loadCities()
   cityId.value = store.currentCityId
+  syncProvinceByCity(cityId.value)
   await loadCity()
 })
 
-watch(cityId, loadCity)
+watch(cityId, async (id) => {
+  syncProvinceByCity(id)
+  if (id) store.setCity(id)
+  await loadCity()
+})
+
+watch(profileDistrictId, () => {
+  if (!loadingCity) loadProfile()
+})
 </script>
 
 <template>
@@ -83,9 +118,16 @@ watch(cityId, loadCity)
         <h1 class="title">数据分析与房价预测</h1>
         <p class="muted">多维度剖析区域房价水平、分布与挂牌画像，并基于机器学习模型预测房源价格</p>
       </div>
-      <el-select v-model="cityId" size="large" style="width: 160px">
-        <el-option v-for="c in store.cities" :key="c.id" :label="c.name" :value="c.id" />
-      </el-select>
+      <RegionSelector
+        v-model:province="selectedProvince"
+        v-model:city-id="cityId"
+        v-model:district-id="profileDistrictId"
+        :cities="store.cities"
+        :districts="districts"
+        :district-clearable="false"
+        size="large"
+        class="hero-region"
+      />
     </div>
 
     <el-row :gutter="16">
@@ -108,9 +150,7 @@ watch(cityId, loadCity)
         <div class="card">
           <div class="trend-head">
             <div class="section-title" style="margin: 0">区域挂牌画像</div>
-            <el-select v-model="profileDistrictId" size="small" style="width: 130px" @change="loadProfile">
-              <el-option v-for="d in districts" :key="d.id" :label="d.name" :value="d.id" />
-            </el-select>
+            <el-tag v-if="profileDistrict" effect="plain">{{ profileDistrict.name }}</el-tag>
           </div>
           <div v-if="profile" class="profile-stats">
             <div v-for="item in profileStats" :key="item.label" class="profile-stat">
@@ -185,6 +225,10 @@ watch(cityId, loadCity)
 }
 .hero p {
   margin: 0;
+}
+.hero-region {
+  flex-shrink: 0;
+  justify-content: flex-end;
 }
 .trend-head {
   display: flex;

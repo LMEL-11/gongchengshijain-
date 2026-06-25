@@ -36,3 +36,14 @@ export const getRealCities = (province) => request.get('/national/real/cities', 
 export const getRealDistricts = (city) => request.get('/national/real/districts', { params: { city } })
 export const getRealAreaProperties = (params) =>
   request.get('/national/real/area-properties', { params })
+
+// --- 认证 ---
+export const login = (username, password) => request.post('/auth/login', { username, password })
+export const getMe = () => request.get('/auth/me')
+
+// --- 管理后台 ---
+export const adminGetProperties = (params) => request.get('/admin/properties', { params })
+export const adminGetProperty = (id) => request.get(`/admin/properties/${id}`)
+export const adminCreateProperty = (data) => request.post('/admin/properties', data)
+export const adminUpdateProperty = (id, data) => request.put(`/admin/properties/${id}`, data)
+export const adminDeleteProperty = (id) => request.delete(`/admin/properties/${id}`)

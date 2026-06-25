@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
 
 const routes = [
   {
@@ -31,12 +32,53 @@ const routes = [
     component: () => import('@/views/Analysis.vue'),
     meta: { title: '数据分析与预测' },
   },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/Login.vue'),
+    meta: { title: '登录' },
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('@/views/Admin.vue'),
+    meta: { title: '管理后台', requiresAdmin: true },
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior: () => ({ top: 0 }),
+})
+
+router.beforeEach(async (to, from, next) => {
+  const auth = useAuthStore()
+
+  // 首次导航时尝试从 token 恢复用户信息
+  if (auth.isLoggedIn && !auth.user) {
+    await auth.fetchUser()
+  }
+
+  // 1. 已登录用户访问登录页 → 跳到对应首页
+  if (to.name === 'login' && auth.isLoggedIn) {
+    next(auth.isAdmin ? '/admin' : '/')
+    return
+  }
+
+  // 2. 管理员页面需要 admin 角色
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    next('/login')
+    return
+  }
+
+  // 3. 未登录用户只能访问登录页
+  if (!auth.isLoggedIn && to.name !== 'login') {
+    next('/login')
+    return
+  }
+
+  next()
 })
 
 router.afterEach((to) => {

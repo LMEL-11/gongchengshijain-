@@ -6,6 +6,15 @@ const request = axios.create({
   timeout: 15000,
 })
 
+// Attach JWT token from localStorage on every request.
+request.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 // Unwrap the standard { code, message, data } envelope so callers get `data`.
 request.interceptors.response.use(
   (response) => {

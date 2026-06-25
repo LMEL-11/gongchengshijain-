@@ -1,6 +1,11 @@
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
+
+const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 
 const navItems = [
   { name: 'screen', label: '数据大屏', icon: 'DataBoard' },
@@ -8,9 +13,14 @@ const navItems = [
   { name: 'explore', label: '房源探索', icon: 'Search' },
   { name: 'analysis', label: '数据分析', icon: 'TrendCharts' },
 ]
-const route = useRoute()
-// 大屏页为全屏深色独立布局，隐藏通用页头/页脚。
-const bare = computed(() => route.name === 'screen')
+
+const adminNavItem = computed(() => {
+  if (!auth.isAdmin) return []
+  return [{ name: 'admin', label: '管理后台', icon: 'Setting' }]
+})
+
+// 大屏页、登录页为全屏布局，隐藏通用页头/页脚。
+const bare = computed(() => route.name === 'screen' || route.name === 'login')
 </script>
 
 <template>
@@ -32,7 +42,31 @@ const bare = computed(() => route.name === 'screen')
             <el-icon><component :is="item.icon" /></el-icon>
             <span>{{ item.label }}</span>
           </router-link>
+          <router-link
+            v-for="item in adminNavItem"
+            :key="item.name"
+            :to="{ name: item.name }"
+            class="nav-link"
+            :class="{ active: route.name === item.name }"
+          >
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
+          </router-link>
         </nav>
+        <div class="user-area">
+          <template v-if="auth.isLoggedIn">
+            <span class="user-greeting">{{ auth.user?.username }}</span>
+            <el-button text size="small" @click="auth.logout(); router.push('/login')">
+              退出
+            </el-button>
+          </template>
+          <template v-else>
+            <router-link to="/login" class="nav-link login-link">
+              <el-icon><User /></el-icon>
+              <span>登录</span>
+            </router-link>
+          </template>
+        </div>
       </div>
     </header>
 
@@ -45,7 +79,7 @@ const bare = computed(() => route.name === 'screen')
     </main>
 
     <footer v-if="!bare" class="app-footer">
-      智慧房源探索平台 · Flask + Vue 3 + Three.js
+      智慧房源探索平台
     </footer>
   </div>
 </template>
@@ -131,5 +165,25 @@ const bare = computed(() => route.name === 'screen')
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* ---- user area ---- */
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-greeting {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.user-area .el-button {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.login-link {
+  font-size: 14px;
 }
 </style>

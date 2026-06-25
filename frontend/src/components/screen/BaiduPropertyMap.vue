@@ -13,6 +13,7 @@ const emit = defineEmits(['close'])
 const router = useRouter()
 
 const mapEl = ref(null)
+const listScrollEl = ref(null)
 const mapError = ref('')
 const selectedId = ref(null)
 
@@ -23,6 +24,7 @@ const summary = computed(() => props.payload || {})
 let map = null
 let BMapApi = null
 let markers = new Map()
+let rowEls = new Map()
 let scriptPromise = null
 
 function fmt(value) {
@@ -51,7 +53,7 @@ function loadBaiduMap() {
     }
 
     const script = document.createElement('script')
-    script.src = `https://api.map.baidu.com/api?v=3.0&ak=${encodeURIComponent(ak)}&callback=${callback}`
+    script.src = `https://api.map.baidu.com/api?v=2.0&ak=${encodeURIComponent(ak)}&callback=${callback}`
     script.onerror = () => {
       delete window[callback]
       reject(new Error('百度地图脚本加载失败'))
@@ -74,12 +76,25 @@ function infoHtml(item) {
 
 function openInfo(item, point) {
   selectedId.value = item.id
+  scrollToListItem(item.id)
   const info = new BMapApi.InfoWindow(infoHtml(item), {
     width: 260,
     title: '',
     enableMessage: false,
   })
   map.openInfoWindow(info, point)
+}
+
+function setRowEl(id, el) {
+  if (el) rowEls.set(id, el)
+  else rowEls.delete(id)
+}
+
+async function scrollToListItem(id) {
+  await nextTick()
+  const row = rowEls.get(id)
+  if (!row || !listScrollEl.value) return
+  row.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
 function clearMap() {
@@ -252,10 +267,11 @@ onBeforeUnmount(() => {
 
         <aside class="property-list">
           <div class="list-head">地图房源</div>
-          <div class="list-scroll">
+          <div ref="listScrollEl" class="list-scroll">
             <div
               v-for="item in items"
               :key="item.id"
+              :ref="(el) => setRowEl(item.id, el)"
               class="prop-row"
               :class="{ active: selectedId === item.id }"
             >

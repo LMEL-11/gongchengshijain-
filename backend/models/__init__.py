@@ -10,8 +10,20 @@ from .district import District
 from .facility import Facility
 from .price_history import PriceHistory
 from .property import Property
+from .property_transaction import PropertyTransaction
+from .user import User
 
-__all__ = ["db", "City", "District", "Property", "Facility", "PriceHistory", "register_models"]
+__all__ = [
+    "db",
+    "City",
+    "District",
+    "Property",
+    "PropertyTransaction",
+    "User",
+    "Facility",
+    "PriceHistory",
+    "register_models",
+]
 
 
 def register_models() -> None:

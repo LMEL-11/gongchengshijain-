@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getCityDistricts, getProperties } from '@/api'
+import RegionSelector from '@/components/RegionSelector.vue'
 import { useAppStore } from '@/store/app'
 
 const store = useAppStore()
@@ -13,6 +14,8 @@ const districts = ref([])
 const list = ref([])
 const total = ref(0)
 const loading = ref(false)
+const selectedProvince = ref('')
+let changingCity = false
 
 const filters = reactive({
   city_id: Number(route.query.city_id) || null,
@@ -45,6 +48,11 @@ async function loadDistricts() {
 }
 
 async function fetchList() {
+  if (!filters.city_id) {
+    list.value = []
+    total.value = 0
+    return
+  }
   loading.value = true
   try {
     const params = {}
@@ -65,12 +73,6 @@ function applyFilters() {
   fetchList()
 }
 
-function onCityChange() {
-  filters.district_id = null
-  loadDistricts()
-  applyFilters()
-}
-
 function onPage(p) {
   filters.page = p
   fetchList()
@@ -80,27 +82,60 @@ function openDetail(id) {
   router.push({ name: 'property-detail', params: { id } })
 }
 
+function syncProvinceByCity(cityId) {
+  if (!cityId) return
+  const city = store.cities.find((c) => c.id === cityId)
+  selectedProvince.value = city?.province || ''
+}
+
 onMounted(async () => {
   await store.loadCities()
   if (!filters.city_id) filters.city_id = store.currentCityId
+  syncProvinceByCity(filters.city_id)
   await loadDistricts()
   await fetchList()
 })
+
+watch(
+  () => filters.city_id,
+  async (cityId) => {
+    changingCity = true
+    filters.page = 1
+    filters.district_id = null
+    syncProvinceByCity(cityId)
+    if (cityId) {
+      store.setCity(cityId)
+      await loadDistricts()
+      await fetchList()
+    } else {
+      districts.value = []
+      list.value = []
+      total.value = 0
+    }
+    changingCity = false
+  },
+)
+
+watch(
+  () => filters.district_id,
+  () => {
+    if (!changingCity) applyFilters()
+  },
+)
 </script>
 
 <template>
   <div class="page">
     <div class="card filter-bar">
       <el-form :inline="true" class="filters">
-        <el-form-item label="城市">
-          <el-select v-model="filters.city_id" style="width: 120px" @change="onCityChange">
-            <el-option v-for="c in store.cities" :key="c.id" :label="c.name" :value="c.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="行政区">
-          <el-select v-model="filters.district_id" clearable placeholder="不限" style="width: 130px" @change="applyFilters">
-            <el-option v-for="d in districts" :key="d.id" :label="d.name" :value="d.id" />
-          </el-select>
+        <el-form-item label="区域">
+          <RegionSelector
+            v-model:province="selectedProvince"
+            v-model:city-id="filters.city_id"
+            v-model:district-id="filters.district_id"
+            :cities="store.cities"
+            :districts="districts"
+          />
         </el-form-item>
         <el-form-item label="户型">
           <el-select v-model="filters.rooms" style="width: 120px" @change="applyFilters">

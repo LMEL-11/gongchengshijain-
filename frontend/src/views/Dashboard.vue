@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 import { getCityDistricts, getOverview, getPriceDistribution } from '@/api'
 import CityMap3D from '@/components/CityMap3D.vue'
+import RegionSelector from '@/components/RegionSelector.vue'
 import StatCard from '@/components/StatCard.vue'
 import DistrictRankingChart from '@/components/charts/DistrictRankingChart.vue'
 import PriceDistributionChart from '@/components/charts/PriceDistributionChart.vue'
@@ -15,24 +16,53 @@ const router = useRouter()
 const overview = ref({})
 const districts = ref([])
 const distribution = ref([])
+const selectedProvince = ref('')
+const selectedDistrictId = ref(null)
 
 const currentCity = computed(() => store.cities.find((c) => c.id === store.currentCityId))
+const currentDistrict = computed(() => districts.value.find((d) => d.id === selectedDistrictId.value))
+const visibleDistricts = computed(() =>
+  selectedDistrictId.value
+    ? districts.value.filter((d) => d.id === selectedDistrictId.value)
+    : districts.value,
+)
 const fmt = (n) => Number(n || 0).toLocaleString()
+
+function syncProvinceByCity(cityId) {
+  if (!cityId) return
+  const city = store.cities.find((c) => c.id === cityId)
+  selectedProvince.value = city?.province || ''
+}
 
 async function loadCityData() {
   const id = store.currentCityId
+  if (!id) {
+    districts.value = []
+    distribution.value = []
+    return
+  }
   const [d, dist] = await Promise.all([getCityDistricts(id), getPriceDistribution(id)])
   districts.value = d
   distribution.value = dist
+  if (selectedDistrictId.value && !d.find((item) => item.id === selectedDistrictId.value)) {
+    selectedDistrictId.value = null
+  }
 }
 
 onMounted(async () => {
   await store.loadCities()
+  syncProvinceByCity(store.currentCityId)
   overview.value = await getOverview()
   await loadCityData()
 })
 
-watch(() => store.currentCityId, loadCityData)
+watch(
+  () => store.currentCityId,
+  async (cityId) => {
+    syncProvinceByCity(cityId)
+    await loadCityData()
+  },
+)
 
 function onSelectDistrict(d) {
   router.push({ name: 'explore', query: { city_id: store.currentCityId, district_id: d.id } })
@@ -48,10 +78,15 @@ function onSelectDistrict(d) {
           采集二手房数据 · 3D 可视化房价分布 · 智能分析与价格预测，助你做出更明智的购房决策
         </p>
       </div>
-      <el-select v-model="store.currentCityId" class="city-select" size="large">
-        <template #prefix><el-icon><Location /></el-icon></template>
-        <el-option v-for="c in store.cities" :key="c.id" :label="c.name" :value="c.id" />
-      </el-select>
+      <RegionSelector
+        v-model:province="selectedProvince"
+        v-model:city-id="store.currentCityId"
+        v-model:district-id="selectedDistrictId"
+        :cities="store.cities"
+        :districts="districts"
+        size="large"
+        class="hero-region"
+      />
     </div>
 
     <el-row :gutter="16" class="stats">
@@ -72,14 +107,14 @@ function onSelectDistrict(d) {
     <el-row :gutter="16">
       <el-col :xs="24" :lg="15">
         <div class="card map-card">
-          <div class="section-title">{{ currentCity?.name }} · 3D 房价地图</div>
-          <CityMap3D :districts="districts" height="480px" @select="onSelectDistrict" />
+          <div class="section-title">{{ currentCity?.name }}{{ currentDistrict ? ` · ${currentDistrict.name}` : '' }} · 3D 房价地图</div>
+          <CityMap3D :districts="visibleDistricts" height="480px" @select="onSelectDistrict" />
         </div>
       </el-col>
       <el-col :xs="24" :lg="9">
         <div class="card">
           <div class="section-title">各区均价排行（元/㎡）</div>
-          <DistrictRankingChart :data="districts" height="480px" />
+          <DistrictRankingChart :data="visibleDistricts" height="480px" />
         </div>
       </el-col>
     </el-row>
@@ -113,9 +148,9 @@ function onSelectDistrict(d) {
   max-width: 640px;
   line-height: 1.6;
 }
-.city-select {
-  width: 160px;
+.hero-region {
   flex-shrink: 0;
+  justify-content: flex-end;
 }
 .stats {
   margin-bottom: 16px;
