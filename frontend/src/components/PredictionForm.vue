@@ -1,54 +1,54 @@
 <!-- 文件功能：提供房价预测表单，加载区域选项并提交预测参数。 -->
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue' // 逐行注释：导入本行所需的依赖。
+import { onMounted, reactive, ref, watch } from 'vue' // 导入本行所需的依赖。
 
-import { getCityDistricts, predictPrice } from '@/api' // 逐行注释：导入本行所需的依赖。
-import { useAppStore } from '@/store/app' // 逐行注释：导入本行所需的依赖。
+import { getCityDistricts, predictPrice } from '@/api' // 导入本行所需的依赖。
+import { useAppStore } from '@/store/app' // 导入本行所需的依赖。
 
-const store = useAppStore() // 逐行注释：声明并初始化当前变量。
-const districts = ref([]) // 逐行注释：声明并初始化当前变量。
-const result = ref(null) // 逐行注释：声明并初始化当前变量。
-const loading = ref(false) // 逐行注释：声明并初始化当前变量。
+const store = useAppStore() // 声明并初始化当前变量。
+const districts = ref([]) // 声明并初始化当前变量。
+const result = ref(null) // 声明并初始化当前变量。
+const loading = ref(false) // 声明并初始化当前变量。
 
-const form = reactive({ // 逐行注释：声明并初始化当前变量。
-  city_id: null, // 逐行注释：配置当前对象字段。
-  district_id: null, // 逐行注释：配置当前对象字段。
-  area: 90, // 逐行注释：配置当前对象字段。
-  rooms: 2, // 逐行注释：配置当前对象字段。
-  halls: 1, // 逐行注释：配置当前对象字段。
-  build_year: 2015, // 逐行注释：配置当前对象字段。
-  floor: 8, // 逐行注释：配置当前对象字段。
-  total_floors: 18, // 逐行注释：配置当前对象字段。
-  has_elevator: true, // 逐行注释：配置当前对象字段。
-}) // 逐行注释：执行本行前端逻辑。
+const form = reactive({ // 声明并初始化当前变量。
+  city_id: null, // 配置当前对象字段。
+  district_id: null, // 配置当前对象字段。
+  area: 90, // 配置当前对象字段。
+  rooms: 2, // 配置当前对象字段。
+  halls: 1, // 配置当前对象字段。
+  build_year: 2015, // 配置当前对象字段。
+  floor: 8, // 配置当前对象字段。
+  total_floors: 18, // 配置当前对象字段。
+  has_elevator: true, // 配置当前对象字段。
+}) // 执行本行前端逻辑。
 
 // 函数功能：根据当前城市加载区域选项。
-async function loadDistricts(cityId) { // 逐行注释：声明当前函数入口。
-  if (!cityId) return // 逐行注释：根据条件判断是否执行分支。
-  districts.value = await getCityDistricts(cityId) // 逐行注释：赋值或更新当前变量/状态。
-  if (districts.value.length) form.district_id = districts.value[0].id // 逐行注释：根据条件判断是否执行分支。
-} // 逐行注释：结束当前代码块或数据结构。
+async function loadDistricts(cityId) { // 声明当前函数入口。
+  if (!cityId) return // 根据条件判断是否执行分支。
+  districts.value = await getCityDistricts(cityId) // 赋值或更新当前变量/状态。
+  if (districts.value.length) form.district_id = districts.value[0].id // 根据条件判断是否执行分支。
+} // 结束当前代码块或数据结构。
 
-watch( // 逐行注释：监听响应式数据变化。
-  () => form.city_id, // 逐行注释：继续声明当前列表项或参数项。
-  (id) => loadDistricts(id), // 逐行注释：继续声明当前列表项或参数项。
-) // 逐行注释：结束当前代码块或数据结构。
+watch( // 监听响应式数据变化。
+  () => form.city_id, // 继续声明当前列表项或参数项。
+  (id) => loadDistricts(id), // 继续声明当前列表项或参数项。
+) // 结束当前代码块或数据结构。
 
-onMounted(async () => { // 逐行注释：注册 Vue 生命周期回调。
-  await store.loadCities() // 逐行注释：等待异步操作完成。
-  form.city_id = store.currentCityId // 逐行注释：赋值或更新当前变量/状态。
-}) // 逐行注释：执行本行前端逻辑。
+onMounted(async () => { // 注册 Vue 生命周期回调。
+  await store.loadCities() // 等待异步操作完成。
+  form.city_id = store.currentCityId // 赋值或更新当前变量/状态。
+}) // 执行本行前端逻辑。
 
 // 函数功能：校验表单并提交预测请求。
-async function onSubmit() { // 逐行注释：声明当前函数入口。
-  if (!form.district_id) return // 逐行注释：根据条件判断是否执行分支。
-  loading.value = true // 逐行注释：赋值或更新当前变量/状态。
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    result.value = await predictPrice({ ...form }) // 逐行注释：赋值或更新当前变量/状态。
-  } finally { // 逐行注释：执行本行前端逻辑。
-    loading.value = false // 逐行注释：赋值或更新当前变量/状态。
-  } // 逐行注释：结束当前代码块或数据结构。
-} // 逐行注释：结束当前代码块或数据结构。
+async function onSubmit() { // 声明当前函数入口。
+  if (!form.district_id) return // 根据条件判断是否执行分支。
+  loading.value = true // 赋值或更新当前变量/状态。
+  try { // 开始执行可能失败的逻辑。
+    result.value = await predictPrice({ ...form }) // 赋值或更新当前变量/状态。
+  } finally { // 执行本行前端逻辑。
+    loading.value = false // 赋值或更新当前变量/状态。
+  } // 结束当前代码块或数据结构。
+} // 结束当前代码块或数据结构。
 </script>
 
 <template>
@@ -132,34 +132,34 @@ async function onSubmit() { // 逐行注释：声明当前函数入口。
 </template>
 
 <style scoped>
-.result { /* 逐行注释：开始当前样式规则块。 */
-  margin-top: 18px; /* 逐行注释：设置当前样式属性。 */
-  padding: 18px; /* 逐行注释：设置当前样式属性。 */
-  border-radius: 10px; /* 逐行注释：设置当前样式属性。 */
-  background: linear-gradient(135deg, #eff6ff, #eef2ff); /* 逐行注释：设置当前样式属性。 */
-  border: 1px solid #dbeafe; /* 逐行注释：设置当前样式属性。 */
-  text-align: center; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
-.big { /* 逐行注释：开始当前样式规则块。 */
-  font-size: 18px; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
-.big b { /* 逐行注释：开始当前样式规则块。 */
-  font-size: 30px; /* 逐行注释：设置当前样式属性。 */
-  color: #1d4ed8; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
-.sub { /* 逐行注释：开始当前样式规则块。 */
-  margin-top: 6px; /* 逐行注释：设置当前样式属性。 */
-  font-size: 15px; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
-.meta { /* 逐行注释：开始当前样式规则块。 */
-  margin-top: 8px; /* 逐行注释：设置当前样式属性。 */
-  font-size: 12px; /* 逐行注释：设置当前样式属性。 */
-  color: #64748b; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
-.fade-enter-active { /* 逐行注释：开始当前样式规则块。 */
-  transition: opacity 0.3s ease; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
-.fade-enter-from { /* 逐行注释：开始当前样式规则块。 */
-  opacity: 0; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
+.result { /* 开始当前样式规则块。 */
+  margin-top: 18px; /* 设置当前样式属性。 */
+  padding: 18px; /* 设置当前样式属性。 */
+  border-radius: 10px; /* 设置当前样式属性。 */
+  background: linear-gradient(135deg, #eff6ff, #eef2ff); /* 设置当前样式属性。 */
+  border: 1px solid #dbeafe; /* 设置当前样式属性。 */
+  text-align: center; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
+.big { /* 开始当前样式规则块。 */
+  font-size: 18px; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
+.big b { /* 开始当前样式规则块。 */
+  font-size: 30px; /* 设置当前样式属性。 */
+  color: #1d4ed8; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
+.sub { /* 开始当前样式规则块。 */
+  margin-top: 6px; /* 设置当前样式属性。 */
+  font-size: 15px; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
+.meta { /* 开始当前样式规则块。 */
+  margin-top: 8px; /* 设置当前样式属性。 */
+  font-size: 12px; /* 设置当前样式属性。 */
+  color: #64748b; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
+.fade-enter-active { /* 开始当前样式规则块。 */
+  transition: opacity 0.3s ease; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
+.fade-enter-from { /* 开始当前样式规则块。 */
+  opacity: 0; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
 </style>

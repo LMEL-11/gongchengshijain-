@@ -1,384 +1,384 @@
 <!-- 文件功能：实现管理员房源管理页面，支持筛选、分页、新增、编辑、详情和删除。 -->
 <script setup>
-import { reactive, ref, onMounted, computed, watch, nextTick } from 'vue' // 逐行注释：导入本行所需的依赖。
-import { useRouter } from 'vue-router' // 逐行注释：导入本行所需的依赖。
-import { ElMessage, ElMessageBox } from 'element-plus' // 逐行注释：导入本行所需的依赖。
-import { // 逐行注释：导入本行所需的依赖。
-  adminGetProperties, // 逐行注释：继续声明当前列表项或参数项。
-  adminCreateProperty, // 逐行注释：继续声明当前列表项或参数项。
-  adminUpdateProperty, // 逐行注释：继续声明当前列表项或参数项。
-  adminDeleteProperty, // 逐行注释：继续声明当前列表项或参数项。
-  getCities, // 逐行注释：继续声明当前列表项或参数项。
-  getCityDistricts, // 逐行注释：继续声明当前列表项或参数项。
-} from '@/api' // 逐行注释：执行本行前端逻辑。
+import { reactive, ref, onMounted, computed, watch, nextTick } from 'vue' // 导入本行所需的依赖。
+import { useRouter } from 'vue-router' // 导入本行所需的依赖。
+import { ElMessage, ElMessageBox } from 'element-plus' // 导入本行所需的依赖。
+import { // 导入本行所需的依赖。
+  adminGetProperties, // 继续声明当前列表项或参数项。
+  adminCreateProperty, // 继续声明当前列表项或参数项。
+  adminUpdateProperty, // 继续声明当前列表项或参数项。
+  adminDeleteProperty, // 继续声明当前列表项或参数项。
+  getCities, // 继续声明当前列表项或参数项。
+  getCityDistricts, // 继续声明当前列表项或参数项。
+} from '@/api' // 执行本行前端逻辑。
 
-const router = useRouter() // 逐行注释：声明并初始化当前变量。
+const router = useRouter() // 声明并初始化当前变量。
 
 // ---------- 列表 ----------
-const list = ref([]) // 逐行注释：声明并初始化当前变量。
-const total = ref(0) // 逐行注释：声明并初始化当前变量。
-const page = ref(1) // 逐行注释：声明并初始化当前变量。
-const pageSize = ref(20) // 逐行注释：声明并初始化当前变量。
-const keyword = ref('') // 逐行注释：声明并初始化当前变量。
-const loading = ref(false) // 逐行注释：声明并初始化当前变量。
+const list = ref([]) // 声明并初始化当前变量。
+const total = ref(0) // 声明并初始化当前变量。
+const page = ref(1) // 声明并初始化当前变量。
+const pageSize = ref(20) // 声明并初始化当前变量。
+const keyword = ref('') // 声明并初始化当前变量。
+const loading = ref(false) // 声明并初始化当前变量。
 
 // 函数功能：按当前筛选和分页条件加载房源列表。
-async function fetchList() { // 逐行注释：声明当前函数入口。
-  loading.value = true // 逐行注释：赋值或更新当前变量/状态。
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    const res = await adminGetProperties({ // 逐行注释：声明并初始化当前变量。
-      page: page.value, // 逐行注释：配置当前对象字段。
-      page_size: pageSize.value, // 逐行注释：配置当前对象字段。
-      keyword: keyword.value || undefined, // 逐行注释：配置当前对象字段。
-      district_id: filterDistrictId.value || undefined, // 逐行注释：配置当前对象字段。
-    }) // 逐行注释：执行本行前端逻辑。
-    list.value = res.items // 逐行注释：赋值或更新当前变量/状态。
-    total.value = res.total // 逐行注释：赋值或更新当前变量/状态。
-  } catch { // 逐行注释：执行本行前端逻辑。
+async function fetchList() { // 声明当前函数入口。
+  loading.value = true // 赋值或更新当前变量/状态。
+  try { // 开始执行可能失败的逻辑。
+    const res = await adminGetProperties({ // 声明并初始化当前变量。
+      page: page.value, // 配置当前对象字段。
+      page_size: pageSize.value, // 配置当前对象字段。
+      keyword: keyword.value || undefined, // 配置当前对象字段。
+      district_id: filterDistrictId.value || undefined, // 配置当前对象字段。
+    }) // 执行本行前端逻辑。
+    list.value = res.items // 赋值或更新当前变量/状态。
+    total.value = res.total // 赋值或更新当前变量/状态。
+  } catch { // 执行本行前端逻辑。
     // handled by interceptor
-  } finally { // 逐行注释：执行本行前端逻辑。
-    loading.value = false // 逐行注释：赋值或更新当前变量/状态。
-  } // 逐行注释：结束当前代码块或数据结构。
-} // 逐行注释：结束当前代码块或数据结构。
+  } finally { // 执行本行前端逻辑。
+    loading.value = false // 赋值或更新当前变量/状态。
+  } // 结束当前代码块或数据结构。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：重置到第一页并执行关键词搜索。
-function handleSearch() { // 逐行注释：声明当前函数入口。
-  page.value = 1 // 逐行注释：赋值或更新当前变量/状态。
-  fetchList() // 逐行注释：执行本行前端逻辑。
-} // 逐行注释：结束当前代码块或数据结构。
+function handleSearch() { // 声明当前函数入口。
+  page.value = 1 // 赋值或更新当前变量/状态。
+  fetchList() // 执行本行前端逻辑。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：处理分页大小变化并重新加载列表。
-function handleSizeChange(size) { // 逐行注释：声明当前函数入口。
-  pageSize.value = size // 逐行注释：赋值或更新当前变量/状态。
-  page.value = 1 // 逐行注释：赋值或更新当前变量/状态。
-  fetchList() // 逐行注释：执行本行前端逻辑。
-} // 逐行注释：结束当前代码块或数据结构。
+function handleSizeChange(size) { // 声明当前函数入口。
+  pageSize.value = size // 赋值或更新当前变量/状态。
+  page.value = 1 // 赋值或更新当前变量/状态。
+  fetchList() // 执行本行前端逻辑。
+} // 结束当前代码块或数据结构。
 
-onMounted(() => { // 逐行注释：注册 Vue 生命周期回调。
-  fetchList() // 逐行注释：执行本行前端逻辑。
+onMounted(() => { // 注册 Vue 生命周期回调。
+  fetchList() // 执行本行前端逻辑。
   loadAllCities() // 预加载城市数据，让省市区选择器立即可用
-}) // 逐行注释：执行本行前端逻辑。
+}) // 执行本行前端逻辑。
 
 // ---------- 省市区级联数据 ----------
 const allCities = ref([])      // 所有城市（含 province 字段）
-const selectedProvince = ref('') // 逐行注释：声明并初始化当前变量。
-const selectedCityId = ref(null) // 逐行注释：声明并初始化当前变量。
+const selectedProvince = ref('') // 声明并初始化当前变量。
+const selectedCityId = ref(null) // 声明并初始化当前变量。
 const districts = ref([])      // 当前城市下的区
 
 // 省份列表从城市数据中计算
 // 函数功能：从城市列表中计算可选省份列表。
-const provinces = computed(() => { // 逐行注释：声明并初始化当前变量。
-  const seen = new Set() // 逐行注释：声明并初始化当前变量。
-  const result = [] // 逐行注释：声明并初始化当前变量。
-  for (const c of allCities.value) { // 逐行注释：遍历集合或范围并逐项处理。
-    const p = c.province || '其他' // 逐行注释：声明并初始化当前变量。
-    if (!seen.has(p)) { // 逐行注释：根据条件判断是否执行分支。
-      seen.add(p) // 逐行注释：执行本行前端逻辑。
-      result.push(p) // 逐行注释：执行本行前端逻辑。
-    } // 逐行注释：结束当前代码块或数据结构。
-  } // 逐行注释：结束当前代码块或数据结构。
-  return result.sort() // 逐行注释：返回当前表达式结果。
-}) // 逐行注释：执行本行前端逻辑。
+const provinces = computed(() => { // 声明并初始化当前变量。
+  const seen = new Set() // 声明并初始化当前变量。
+  const result = [] // 声明并初始化当前变量。
+  for (const c of allCities.value) { // 遍历集合或范围并逐项处理。
+    const p = c.province || '其他' // 声明并初始化当前变量。
+    if (!seen.has(p)) { // 根据条件判断是否执行分支。
+      seen.add(p) // 执行本行前端逻辑。
+      result.push(p) // 执行本行前端逻辑。
+    } // 结束当前代码块或数据结构。
+  } // 结束当前代码块或数据结构。
+  return result.sort() // 返回当前表达式结果。
+}) // 执行本行前端逻辑。
 
 // 当前省份下的城市列表
 // 函数功能：根据当前省份筛选可选城市。
-const filteredCities = computed(() => { // 逐行注释：声明并初始化当前变量。
-  if (!selectedProvince.value) return [] // 逐行注释：根据条件判断是否执行分支。
-  return allCities.value.filter((c) => (c.province || '其他') === selectedProvince.value) // 逐行注释：返回当前表达式结果。
-}) // 逐行注释：执行本行前端逻辑。
+const filteredCities = computed(() => { // 声明并初始化当前变量。
+  if (!selectedProvince.value) return [] // 根据条件判断是否执行分支。
+  return allCities.value.filter((c) => (c.province || '其他') === selectedProvince.value) // 返回当前表达式结果。
+}) // 执行本行前端逻辑。
 
 // 函数功能：加载全部城市数据，供省市区选择器使用。
-async function loadAllCities() { // 逐行注释：声明当前函数入口。
-  if (allCities.value.length) return // 逐行注释：根据条件判断是否执行分支。
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    const data = await getCities() // 逐行注释：声明并初始化当前变量。
-    allCities.value = Array.isArray(data) ? data : [] // 逐行注释：赋值或更新当前变量/状态。
-  } catch { // 逐行注释：执行本行前端逻辑。
-    allCities.value = [] // 逐行注释：赋值或更新当前变量/状态。
-  } // 逐行注释：结束当前代码块或数据结构。
-} // 逐行注释：结束当前代码块或数据结构。
+async function loadAllCities() { // 声明当前函数入口。
+  if (allCities.value.length) return // 根据条件判断是否执行分支。
+  try { // 开始执行可能失败的逻辑。
+    const data = await getCities() // 声明并初始化当前变量。
+    allCities.value = Array.isArray(data) ? data : [] // 赋值或更新当前变量/状态。
+  } catch { // 执行本行前端逻辑。
+    allCities.value = [] // 赋值或更新当前变量/状态。
+  } // 结束当前代码块或数据结构。
+} // 结束当前代码块或数据结构。
 
 // 选中省份 → 重置城市和区
-watch(selectedProvince, () => { // 逐行注释：监听响应式数据变化。
-  selectedCityId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  form.district_id = null // 逐行注释：赋值或更新当前变量/状态。
-  districts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-}) // 逐行注释：执行本行前端逻辑。
+watch(selectedProvince, () => { // 监听响应式数据变化。
+  selectedCityId.value = null // 赋值或更新当前变量/状态。
+  form.district_id = null // 赋值或更新当前变量/状态。
+  districts.value = [] // 赋值或更新当前变量/状态。
+}) // 执行本行前端逻辑。
 
 // 选中城市 → 加载该城市下的区
-watch(selectedCityId, async (cityId) => { // 逐行注释：监听响应式数据变化。
-  form.district_id = null // 逐行注释：赋值或更新当前变量/状态。
-  districts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-  if (!cityId) return // 逐行注释：根据条件判断是否执行分支。
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    districts.value = await getCityDistricts(cityId) // 逐行注释：赋值或更新当前变量/状态。
-  } catch { // 逐行注释：执行本行前端逻辑。
-    districts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-  } // 逐行注释：结束当前代码块或数据结构。
-}) // 逐行注释：执行本行前端逻辑。
+watch(selectedCityId, async (cityId) => { // 监听响应式数据变化。
+  form.district_id = null // 赋值或更新当前变量/状态。
+  districts.value = [] // 赋值或更新当前变量/状态。
+  if (!cityId) return // 根据条件判断是否执行分支。
+  try { // 开始执行可能失败的逻辑。
+    districts.value = await getCityDistricts(cityId) // 赋值或更新当前变量/状态。
+  } catch { // 执行本行前端逻辑。
+    districts.value = [] // 赋值或更新当前变量/状态。
+  } // 结束当前代码块或数据结构。
+}) // 执行本行前端逻辑。
 
 // ---------- 顶部工具栏省市区筛选（独立于对话框） ----------
-const filterProvince = ref('') // 逐行注释：声明并初始化当前变量。
-const filterCityId = ref(null) // 逐行注释：声明并初始化当前变量。
-const filterDistrictId = ref(null) // 逐行注释：声明并初始化当前变量。
-const filterDistricts = ref([]) // 逐行注释：声明并初始化当前变量。
+const filterProvince = ref('') // 声明并初始化当前变量。
+const filterCityId = ref(null) // 声明并初始化当前变量。
+const filterDistrictId = ref(null) // 声明并初始化当前变量。
+const filterDistricts = ref([]) // 声明并初始化当前变量。
 
 // 函数功能：根据筛选省份计算筛选城市列表。
-const filterCities = computed(() => { // 逐行注释：声明并初始化当前变量。
-  if (!filterProvince.value) return [] // 逐行注释：根据条件判断是否执行分支。
-  return allCities.value.filter((c) => (c.province || '其他') === filterProvince.value) // 逐行注释：返回当前表达式结果。
-}) // 逐行注释：执行本行前端逻辑。
+const filterCities = computed(() => { // 声明并初始化当前变量。
+  if (!filterProvince.value) return [] // 根据条件判断是否执行分支。
+  return allCities.value.filter((c) => (c.province || '其他') === filterProvince.value) // 返回当前表达式结果。
+}) // 执行本行前端逻辑。
 
-watch(filterProvince, () => { // 逐行注释：监听响应式数据变化。
-  filterCityId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  filterDistrictId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  filterDistricts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-}) // 逐行注释：执行本行前端逻辑。
+watch(filterProvince, () => { // 监听响应式数据变化。
+  filterCityId.value = null // 赋值或更新当前变量/状态。
+  filterDistrictId.value = null // 赋值或更新当前变量/状态。
+  filterDistricts.value = [] // 赋值或更新当前变量/状态。
+}) // 执行本行前端逻辑。
 
-watch(filterCityId, async (cityId) => { // 逐行注释：监听响应式数据变化。
-  filterDistrictId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  filterDistricts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-  if (!cityId) return // 逐行注释：根据条件判断是否执行分支。
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    filterDistricts.value = await getCityDistricts(cityId) // 逐行注释：赋值或更新当前变量/状态。
-  } catch { // 逐行注释：执行本行前端逻辑。
-    filterDistricts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-  } // 逐行注释：结束当前代码块或数据结构。
-}) // 逐行注释：执行本行前端逻辑。
+watch(filterCityId, async (cityId) => { // 监听响应式数据变化。
+  filterDistrictId.value = null // 赋值或更新当前变量/状态。
+  filterDistricts.value = [] // 赋值或更新当前变量/状态。
+  if (!cityId) return // 根据条件判断是否执行分支。
+  try { // 开始执行可能失败的逻辑。
+    filterDistricts.value = await getCityDistricts(cityId) // 赋值或更新当前变量/状态。
+  } catch { // 执行本行前端逻辑。
+    filterDistricts.value = [] // 赋值或更新当前变量/状态。
+  } // 结束当前代码块或数据结构。
+}) // 执行本行前端逻辑。
 
-watch(filterDistrictId, () => { // 逐行注释：监听响应式数据变化。
-  page.value = 1 // 逐行注释：赋值或更新当前变量/状态。
-  fetchList() // 逐行注释：执行本行前端逻辑。
-}) // 逐行注释：执行本行前端逻辑。
+watch(filterDistrictId, () => { // 监听响应式数据变化。
+  page.value = 1 // 赋值或更新当前变量/状态。
+  fetchList() // 执行本行前端逻辑。
+}) // 执行本行前端逻辑。
 
 // ---------- 新增 / 编辑 ----------
-const dialogVisible = ref(false) // 逐行注释：声明并初始化当前变量。
-const dialogTitle = ref('新增房源') // 逐行注释：声明并初始化当前变量。
-const isEdit = ref(false) // 逐行注释：声明并初始化当前变量。
-const editId = ref(null) // 逐行注释：声明并初始化当前变量。
-const formRef = ref(null) // 逐行注释：声明并初始化当前变量。
-const submitting = ref(false) // 逐行注释：声明并初始化当前变量。
+const dialogVisible = ref(false) // 声明并初始化当前变量。
+const dialogTitle = ref('新增房源') // 声明并初始化当前变量。
+const isEdit = ref(false) // 声明并初始化当前变量。
+const editId = ref(null) // 声明并初始化当前变量。
+const formRef = ref(null) // 声明并初始化当前变量。
+const submitting = ref(false) // 声明并初始化当前变量。
 
 // 函数功能：返回新增或编辑房源表单的默认数据结构。
-function defaultForm() { // 逐行注释：声明当前函数入口。
-  return { // 逐行注释：返回当前表达式结果。
-    district_id: null, // 逐行注释：配置当前对象字段。
-    title: '', // 逐行注释：配置当前对象字段。
-    total_price: undefined, // 逐行注释：配置当前对象字段。
-    unit_price: undefined, // 逐行注释：配置当前对象字段。
-    area: undefined, // 逐行注释：配置当前对象字段。
-    rooms: 0, // 逐行注释：配置当前对象字段。
-    halls: 0, // 逐行注释：配置当前对象字段。
-    floor: undefined, // 逐行注释：配置当前对象字段。
-    total_floors: undefined, // 逐行注释：配置当前对象字段。
-    build_year: undefined, // 逐行注释：配置当前对象字段。
-    orientation: '', // 逐行注释：配置当前对象字段。
-    decoration: '', // 逐行注释：配置当前对象字段。
-    has_elevator: false, // 逐行注释：配置当前对象字段。
-    listing_type: '二手房', // 逐行注释：配置当前对象字段。
-    lng: undefined, // 逐行注释：配置当前对象字段。
-    lat: undefined, // 逐行注释：配置当前对象字段。
-    source: 'manual', // 逐行注释：配置当前对象字段。
-    source_url: '', // 逐行注释：配置当前对象字段。
-    listing_date: '', // 逐行注释：配置当前对象字段。
-    ownership_type: '', // 逐行注释：配置当前对象字段。
-    property_right: '', // 逐行注释：配置当前对象字段。
-    mortgage: '', // 逐行注释：配置当前对象字段。
-    selling_point: '', // 逐行注释：配置当前对象字段。
-    community_intro: '', // 逐行注释：配置当前对象字段。
-    layout_intro: '', // 逐行注释：配置当前对象字段。
-    transport_intro: '', // 逐行注释：配置当前对象字段。
-  } // 逐行注释：结束当前代码块或数据结构。
-} // 逐行注释：结束当前代码块或数据结构。
+function defaultForm() { // 声明当前函数入口。
+  return { // 返回当前表达式结果。
+    district_id: null, // 配置当前对象字段。
+    title: '', // 配置当前对象字段。
+    total_price: undefined, // 配置当前对象字段。
+    unit_price: undefined, // 配置当前对象字段。
+    area: undefined, // 配置当前对象字段。
+    rooms: 0, // 配置当前对象字段。
+    halls: 0, // 配置当前对象字段。
+    floor: undefined, // 配置当前对象字段。
+    total_floors: undefined, // 配置当前对象字段。
+    build_year: undefined, // 配置当前对象字段。
+    orientation: '', // 配置当前对象字段。
+    decoration: '', // 配置当前对象字段。
+    has_elevator: false, // 配置当前对象字段。
+    listing_type: '二手房', // 配置当前对象字段。
+    lng: undefined, // 配置当前对象字段。
+    lat: undefined, // 配置当前对象字段。
+    source: 'manual', // 配置当前对象字段。
+    source_url: '', // 配置当前对象字段。
+    listing_date: '', // 配置当前对象字段。
+    ownership_type: '', // 配置当前对象字段。
+    property_right: '', // 配置当前对象字段。
+    mortgage: '', // 配置当前对象字段。
+    selling_point: '', // 配置当前对象字段。
+    community_intro: '', // 配置当前对象字段。
+    layout_intro: '', // 配置当前对象字段。
+    transport_intro: '', // 配置当前对象字段。
+  } // 结束当前代码块或数据结构。
+} // 结束当前代码块或数据结构。
 
-const form = reactive(defaultForm()) // 逐行注释：声明并初始化当前变量。
+const form = reactive(defaultForm()) // 声明并初始化当前变量。
 
-const decorationOptions = ['毛坯', '简装', '精装', '豪装', '其他'] // 逐行注释：声明并初始化当前变量。
-const orientationOptions = [ // 逐行注释：声明并初始化当前变量。
-  '南北', '南', '北', '东西', '东', '西', '东南', '西南', '东北', '西北', // 逐行注释：继续声明当前列表项或参数项。
-] // 逐行注释：结束当前代码块或数据结构。
-const listingTypeOptions = ['二手房', '新房', '出租'] // 逐行注释：声明并初始化当前变量。
-const ownershipTypeOptions = ['商品房', '已购公房', '经济适用房', '央产房', '私产', '其他'] // 逐行注释：声明并初始化当前变量。
-const propertyRightOptions = ['非共有', '共有'] // 逐行注释：声明并初始化当前变量。
-const mortgageOptions = ['无抵押', '有抵押', '有抵押业主自还', '有抵押客户偿还', '其他'] // 逐行注释：声明并初始化当前变量。
+const decorationOptions = ['毛坯', '简装', '精装', '豪装', '其他'] // 声明并初始化当前变量。
+const orientationOptions = [ // 声明并初始化当前变量。
+  '南北', '南', '北', '东西', '东', '西', '东南', '西南', '东北', '西北', // 继续声明当前列表项或参数项。
+] // 结束当前代码块或数据结构。
+const listingTypeOptions = ['二手房', '新房', '出租'] // 声明并初始化当前变量。
+const ownershipTypeOptions = ['商品房', '已购公房', '经济适用房', '央产房', '私产', '其他'] // 声明并初始化当前变量。
+const propertyRightOptions = ['非共有', '共有'] // 声明并初始化当前变量。
+const mortgageOptions = ['无抵押', '有抵押', '有抵押业主自还', '有抵押客户偿还', '其他'] // 声明并初始化当前变量。
 
-const formRules = { // 逐行注释：声明并初始化当前变量。
-  title: [{ required: true, message: '请输入房源标题', trigger: 'blur' }], // 逐行注释：配置当前对象字段。
-  district_id: [{ required: true, message: '请选择区域', trigger: 'change' }], // 逐行注释：配置当前对象字段。
-} // 逐行注释：结束当前代码块或数据结构。
+const formRules = { // 声明并初始化当前变量。
+  title: [{ required: true, message: '请输入房源标题', trigger: 'blur' }], // 配置当前对象字段。
+  district_id: [{ required: true, message: '请选择区域', trigger: 'change' }], // 配置当前对象字段。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：打开新增房源对话框并重置表单状态。
-async function openCreate() { // 逐行注释：声明当前函数入口。
-  await loadAllCities() // 逐行注释：等待异步操作完成。
-  dialogTitle.value = '新增房源' // 逐行注释：赋值或更新当前变量/状态。
-  isEdit.value = false // 逐行注释：赋值或更新当前变量/状态。
-  editId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  Object.assign(form, defaultForm()) // 逐行注释：执行本行前端逻辑。
-  selectedProvince.value = '' // 逐行注释：赋值或更新当前变量/状态。
-  selectedCityId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  districts.value = [] // 逐行注释：赋值或更新当前变量/状态。
-  dialogVisible.value = true // 逐行注释：赋值或更新当前变量/状态。
-} // 逐行注释：结束当前代码块或数据结构。
+async function openCreate() { // 声明当前函数入口。
+  await loadAllCities() // 等待异步操作完成。
+  dialogTitle.value = '新增房源' // 赋值或更新当前变量/状态。
+  isEdit.value = false // 赋值或更新当前变量/状态。
+  editId.value = null // 赋值或更新当前变量/状态。
+  Object.assign(form, defaultForm()) // 执行本行前端逻辑。
+  selectedProvince.value = '' // 赋值或更新当前变量/状态。
+  selectedCityId.value = null // 赋值或更新当前变量/状态。
+  districts.value = [] // 赋值或更新当前变量/状态。
+  dialogVisible.value = true // 赋值或更新当前变量/状态。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：打开编辑房源对话框并回填当前行数据。
-async function openEdit(row) { // 逐行注释：声明当前函数入口。
-  await loadAllCities() // 逐行注释：等待异步操作完成。
-  dialogTitle.value = '编辑房源' // 逐行注释：赋值或更新当前变量/状态。
-  isEdit.value = true // 逐行注释：赋值或更新当前变量/状态。
-  editId.value = row.id // 逐行注释：赋值或更新当前变量/状态。
+async function openEdit(row) { // 声明当前函数入口。
+  await loadAllCities() // 等待异步操作完成。
+  dialogTitle.value = '编辑房源' // 赋值或更新当前变量/状态。
+  isEdit.value = true // 赋值或更新当前变量/状态。
+  editId.value = row.id // 赋值或更新当前变量/状态。
 
   // 填充表单数据
-  const t = row.transaction || {} // 逐行注释：声明并初始化当前变量。
-  Object.assign(form, { // 逐行注释：执行本行前端逻辑。
-    district_id: row.district_id, // 逐行注释：配置当前对象字段。
-    title: row.title, // 逐行注释：配置当前对象字段。
-    total_price: row.total_price, // 逐行注释：配置当前对象字段。
-    unit_price: row.unit_price, // 逐行注释：配置当前对象字段。
-    area: row.area, // 逐行注释：配置当前对象字段。
-    rooms: row.rooms ?? 0, // 逐行注释：配置当前对象字段。
-    halls: row.halls ?? 0, // 逐行注释：配置当前对象字段。
-    floor: row.floor, // 逐行注释：配置当前对象字段。
-    total_floors: row.total_floors, // 逐行注释：配置当前对象字段。
-    build_year: row.build_year, // 逐行注释：配置当前对象字段。
-    orientation: row.orientation || '', // 逐行注释：配置当前对象字段。
-    decoration: row.decoration || '', // 逐行注释：配置当前对象字段。
-    has_elevator: row.has_elevator ?? false, // 逐行注释：配置当前对象字段。
-    listing_type: row.listing_type || '二手房', // 逐行注释：配置当前对象字段。
-    lng: row.lng, // 逐行注释：配置当前对象字段。
-    lat: row.lat, // 逐行注释：配置当前对象字段。
-    source: row.source || 'manual', // 逐行注释：配置当前对象字段。
-    source_url: row.source_url || '', // 逐行注释：配置当前对象字段。
-    listing_date: t.listing_date || '', // 逐行注释：配置当前对象字段。
-    ownership_type: t.ownership_type || '', // 逐行注释：配置当前对象字段。
-    property_right: t.property_right || '', // 逐行注释：配置当前对象字段。
-    mortgage: t.mortgage || '', // 逐行注释：配置当前对象字段。
-    selling_point: t.selling_point || '', // 逐行注释：配置当前对象字段。
-    community_intro: t.community_intro || '', // 逐行注释：配置当前对象字段。
-    layout_intro: t.layout_intro || '', // 逐行注释：配置当前对象字段。
-    transport_intro: t.transport_intro || '', // 逐行注释：配置当前对象字段。
-  }) // 逐行注释：执行本行前端逻辑。
+  const t = row.transaction || {} // 声明并初始化当前变量。
+  Object.assign(form, { // 执行本行前端逻辑。
+    district_id: row.district_id, // 配置当前对象字段。
+    title: row.title, // 配置当前对象字段。
+    total_price: row.total_price, // 配置当前对象字段。
+    unit_price: row.unit_price, // 配置当前对象字段。
+    area: row.area, // 配置当前对象字段。
+    rooms: row.rooms ?? 0, // 配置当前对象字段。
+    halls: row.halls ?? 0, // 配置当前对象字段。
+    floor: row.floor, // 配置当前对象字段。
+    total_floors: row.total_floors, // 配置当前对象字段。
+    build_year: row.build_year, // 配置当前对象字段。
+    orientation: row.orientation || '', // 配置当前对象字段。
+    decoration: row.decoration || '', // 配置当前对象字段。
+    has_elevator: row.has_elevator ?? false, // 配置当前对象字段。
+    listing_type: row.listing_type || '二手房', // 配置当前对象字段。
+    lng: row.lng, // 配置当前对象字段。
+    lat: row.lat, // 配置当前对象字段。
+    source: row.source || 'manual', // 配置当前对象字段。
+    source_url: row.source_url || '', // 配置当前对象字段。
+    listing_date: t.listing_date || '', // 配置当前对象字段。
+    ownership_type: t.ownership_type || '', // 配置当前对象字段。
+    property_right: t.property_right || '', // 配置当前对象字段。
+    mortgage: t.mortgage || '', // 配置当前对象字段。
+    selling_point: t.selling_point || '', // 配置当前对象字段。
+    community_intro: t.community_intro || '', // 配置当前对象字段。
+    layout_intro: t.layout_intro || '', // 配置当前对象字段。
+    transport_intro: t.transport_intro || '', // 配置当前对象字段。
+  }) // 执行本行前端逻辑。
 
   // 根据 district_id 反查省/市/区并级联
-  selectedProvince.value = '' // 逐行注释：赋值或更新当前变量/状态。
-  selectedCityId.value = null // 逐行注释：赋值或更新当前变量/状态。
-  districts.value = [] // 逐行注释：赋值或更新当前变量/状态。
+  selectedProvince.value = '' // 赋值或更新当前变量/状态。
+  selectedCityId.value = null // 赋值或更新当前变量/状态。
+  districts.value = [] // 赋值或更新当前变量/状态。
 
-  if (!row.district_id) { // 逐行注释：根据条件判断是否执行分支。
-    dialogVisible.value = true // 逐行注释：赋值或更新当前变量/状态。
-    return // 逐行注释：返回当前表达式结果。
-  } // 逐行注释：结束当前代码块或数据结构。
+  if (!row.district_id) { // 根据条件判断是否执行分支。
+    dialogVisible.value = true // 赋值或更新当前变量/状态。
+    return // 返回当前表达式结果。
+  } // 结束当前代码块或数据结构。
 
   // 遍历所有城市找到包含该区的那一个
-  for (const c of allCities.value) { // 逐行注释：遍历集合或范围并逐项处理。
-    try { // 逐行注释：开始执行可能失败的逻辑。
-      const dists = await getCityDistricts(c.id) // 逐行注释：声明并初始化当前变量。
-      const found = dists.find((d) => d.id === row.district_id) // 逐行注释：声明并初始化当前变量。
-      if (found) { // 逐行注释：根据条件判断是否执行分支。
-        selectedProvince.value = c.province || '其他' // 逐行注释：赋值或更新当前变量/状态。
-        selectedCityId.value = c.id // 逐行注释：赋值或更新当前变量/状态。
-        districts.value = dists // 逐行注释：赋值或更新当前变量/状态。
-        await nextTick() // 逐行注释：等待异步操作完成。
-        form.district_id = row.district_id // 逐行注释：赋值或更新当前变量/状态。
-        break // 逐行注释：执行本行前端逻辑。
-      } // 逐行注释：结束当前代码块或数据结构。
-    } catch { // 逐行注释：执行本行前端逻辑。
+  for (const c of allCities.value) { // 遍历集合或范围并逐项处理。
+    try { // 开始执行可能失败的逻辑。
+      const dists = await getCityDistricts(c.id) // 声明并初始化当前变量。
+      const found = dists.find((d) => d.id === row.district_id) // 声明并初始化当前变量。
+      if (found) { // 根据条件判断是否执行分支。
+        selectedProvince.value = c.province || '其他' // 赋值或更新当前变量/状态。
+        selectedCityId.value = c.id // 赋值或更新当前变量/状态。
+        districts.value = dists // 赋值或更新当前变量/状态。
+        await nextTick() // 等待异步操作完成。
+        form.district_id = row.district_id // 赋值或更新当前变量/状态。
+        break // 执行本行前端逻辑。
+      } // 结束当前代码块或数据结构。
+    } catch { // 执行本行前端逻辑。
       // continue trying other cities
-    } // 逐行注释：结束当前代码块或数据结构。
-  } // 逐行注释：结束当前代码块或数据结构。
+    } // 结束当前代码块或数据结构。
+  } // 结束当前代码块或数据结构。
 
-  dialogVisible.value = true // 逐行注释：赋值或更新当前变量/状态。
-} // 逐行注释：结束当前代码块或数据结构。
+  dialogVisible.value = true // 赋值或更新当前变量/状态。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：跳转到房源详情页面。
-function openDetail(row) { // 逐行注释：声明当前函数入口。
-  if (!row?.id) return // 逐行注释：根据条件判断是否执行分支。
-  router.push({ name: 'property-detail', params: { id: row.id } }) // 逐行注释：执行路由跳转或路由操作。
-} // 逐行注释：结束当前代码块或数据结构。
+function openDetail(row) { // 声明当前函数入口。
+  if (!row?.id) return // 根据条件判断是否执行分支。
+  router.push({ name: 'property-detail', params: { id: row.id } }) // 执行路由跳转或路由操作。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：校验并提交新增或编辑房源表单。
-async function handleSubmit() { // 逐行注释：声明当前函数入口。
-  const valid = await formRef.value.validate().catch(() => false) // 逐行注释：声明并初始化当前变量。
-  if (!valid) return // 逐行注释：根据条件判断是否执行分支。
+async function handleSubmit() { // 声明当前函数入口。
+  const valid = await formRef.value.validate().catch(() => false) // 声明并初始化当前变量。
+  if (!valid) return // 根据条件判断是否执行分支。
 
-  submitting.value = true // 逐行注释：赋值或更新当前变量/状态。
-  const payload = { ...form } // 逐行注释：声明并初始化当前变量。
+  submitting.value = true // 赋值或更新当前变量/状态。
+  const payload = { ...form } // 声明并初始化当前变量。
   // 清理空字符串
-  if (payload.orientation === '') payload.orientation = null // 逐行注释：根据条件判断是否执行分支。
-  if (payload.decoration === '') payload.decoration = null // 逐行注释：根据条件判断是否执行分支。
-  if (payload.source_url === '') payload.source_url = null // 逐行注释：根据条件判断是否执行分支。
-  for (const field of [ // 逐行注释：遍历集合或范围并逐项处理。
-    'listing_date', // 逐行注释：继续声明当前列表项或参数项。
-    'ownership_type', // 逐行注释：继续声明当前列表项或参数项。
-    'property_right', // 逐行注释：继续声明当前列表项或参数项。
-    'mortgage', // 逐行注释：继续声明当前列表项或参数项。
-    'selling_point', // 逐行注释：继续声明当前列表项或参数项。
-    'community_intro', // 逐行注释：继续声明当前列表项或参数项。
-    'layout_intro', // 逐行注释：继续声明当前列表项或参数项。
-    'transport_intro', // 逐行注释：继续声明当前列表项或参数项。
-  ]) { // 逐行注释：执行本行前端逻辑。
-    if (payload[field] === '') payload[field] = null // 逐行注释：根据条件判断是否执行分支。
-  } // 逐行注释：结束当前代码块或数据结构。
+  if (payload.orientation === '') payload.orientation = null // 根据条件判断是否执行分支。
+  if (payload.decoration === '') payload.decoration = null // 根据条件判断是否执行分支。
+  if (payload.source_url === '') payload.source_url = null // 根据条件判断是否执行分支。
+  for (const field of [ // 遍历集合或范围并逐项处理。
+    'listing_date', // 继续声明当前列表项或参数项。
+    'ownership_type', // 继续声明当前列表项或参数项。
+    'property_right', // 继续声明当前列表项或参数项。
+    'mortgage', // 继续声明当前列表项或参数项。
+    'selling_point', // 继续声明当前列表项或参数项。
+    'community_intro', // 继续声明当前列表项或参数项。
+    'layout_intro', // 继续声明当前列表项或参数项。
+    'transport_intro', // 继续声明当前列表项或参数项。
+  ]) { // 执行本行前端逻辑。
+    if (payload[field] === '') payload[field] = null // 根据条件判断是否执行分支。
+  } // 结束当前代码块或数据结构。
 
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    let savedProperty = null // 逐行注释：声明并初始化当前变量。
-    if (isEdit.value) { // 逐行注释：根据条件判断是否执行分支。
-      savedProperty = await adminUpdateProperty(editId.value, payload) // 逐行注释：赋值或更新当前变量/状态。
-      ElMessage.success('房源已更新') // 逐行注释：执行本行前端逻辑。
-    } else { // 逐行注释：执行本行前端逻辑。
-      savedProperty = await adminCreateProperty(payload) // 逐行注释：赋值或更新当前变量/状态。
-      ElMessage.success('房源已创建') // 逐行注释：执行本行前端逻辑。
-    } // 逐行注释：结束当前代码块或数据结构。
-    dialogVisible.value = false // 逐行注释：赋值或更新当前变量/状态。
-    fetchList() // 逐行注释：执行本行前端逻辑。
+  try { // 开始执行可能失败的逻辑。
+    let savedProperty = null // 声明并初始化当前变量。
+    if (isEdit.value) { // 根据条件判断是否执行分支。
+      savedProperty = await adminUpdateProperty(editId.value, payload) // 赋值或更新当前变量/状态。
+      ElMessage.success('房源已更新') // 执行本行前端逻辑。
+    } else { // 执行本行前端逻辑。
+      savedProperty = await adminCreateProperty(payload) // 赋值或更新当前变量/状态。
+      ElMessage.success('房源已创建') // 执行本行前端逻辑。
+    } // 结束当前代码块或数据结构。
+    dialogVisible.value = false // 赋值或更新当前变量/状态。
+    fetchList() // 执行本行前端逻辑。
 
-    if (!isEdit.value && savedProperty?.id) { // 逐行注释：根据条件判断是否执行分支。
-      ElMessageBox.confirm('房源已创建，是否立即查看详情页？', '创建成功', { // 逐行注释：执行本行前端逻辑。
-        type: 'success', // 逐行注释：配置当前对象字段。
-        confirmButtonText: '查看详情', // 逐行注释：配置当前对象字段。
-        cancelButtonText: '继续管理', // 逐行注释：配置当前对象字段。
-      }) // 逐行注释：执行本行前端逻辑。
-        .then(() => openDetail(savedProperty)) // 逐行注释：执行本行前端逻辑。
-        .catch(() => {}) // 逐行注释：执行本行前端逻辑。
-    } // 逐行注释：结束当前代码块或数据结构。
-  } catch { // 逐行注释：执行本行前端逻辑。
+    if (!isEdit.value && savedProperty?.id) { // 根据条件判断是否执行分支。
+      ElMessageBox.confirm('房源已创建，是否立即查看详情页？', '创建成功', { // 执行本行前端逻辑。
+        type: 'success', // 配置当前对象字段。
+        confirmButtonText: '查看详情', // 配置当前对象字段。
+        cancelButtonText: '继续管理', // 配置当前对象字段。
+      }) // 执行本行前端逻辑。
+        .then(() => openDetail(savedProperty)) // 执行本行前端逻辑。
+        .catch(() => {}) // 执行本行前端逻辑。
+    } // 结束当前代码块或数据结构。
+  } catch { // 执行本行前端逻辑。
     // handled by interceptor
-  } finally { // 逐行注释：执行本行前端逻辑。
-    submitting.value = false // 逐行注释：赋值或更新当前变量/状态。
-  } // 逐行注释：结束当前代码块或数据结构。
-} // 逐行注释：结束当前代码块或数据结构。
+  } finally { // 执行本行前端逻辑。
+    submitting.value = false // 赋值或更新当前变量/状态。
+  } // 结束当前代码块或数据结构。
+} // 结束当前代码块或数据结构。
 
 // 函数功能：确认后删除指定房源并刷新列表。
-async function handleDelete(row) { // 逐行注释：声明当前函数入口。
-  try { // 逐行注释：开始执行可能失败的逻辑。
-    await ElMessageBox.confirm( // 逐行注释：等待异步操作完成。
-      `确定要删除房源「${row.title}」吗？删除后不可恢复。`, // 逐行注释：继续声明当前列表项或参数项。
-      '删除确认', // 逐行注释：继续声明当前列表项或参数项。
-      { type: 'warning', confirmButtonText: '确定删除', cancelButtonText: '取消' }, // 逐行注释：配置当前对象字段。
-    ) // 逐行注释：结束当前代码块或数据结构。
-    await adminDeleteProperty(row.id) // 逐行注释：等待异步操作完成。
-    ElMessage.success('已删除') // 逐行注释：执行本行前端逻辑。
-    fetchList() // 逐行注释：执行本行前端逻辑。
-  } catch { // 逐行注释：执行本行前端逻辑。
+async function handleDelete(row) { // 声明当前函数入口。
+  try { // 开始执行可能失败的逻辑。
+    await ElMessageBox.confirm( // 等待异步操作完成。
+      `确定要删除房源「${row.title}」吗？删除后不可恢复。`, // 继续声明当前列表项或参数项。
+      '删除确认', // 继续声明当前列表项或参数项。
+      { type: 'warning', confirmButtonText: '确定删除', cancelButtonText: '取消' }, // 配置当前对象字段。
+    ) // 结束当前代码块或数据结构。
+    await adminDeleteProperty(row.id) // 等待异步操作完成。
+    ElMessage.success('已删除') // 执行本行前端逻辑。
+    fetchList() // 执行本行前端逻辑。
+  } catch { // 执行本行前端逻辑。
     // cancelled or error
-  } // 逐行注释：结束当前代码块或数据结构。
-} // 逐行注释：结束当前代码块或数据结构。
+  } // 结束当前代码块或数据结构。
+} // 结束当前代码块或数据结构。
 
 // ---------- 表格格式化 ----------
 // 函数功能：格式化总价展示文本。
-function formatPrice(val) { // 逐行注释：声明当前函数入口。
-  if (val == null) return '-' // 逐行注释：根据条件判断是否执行分支。
-  return `${val} 万` // 逐行注释：返回当前表达式结果。
-} // 逐行注释：结束当前代码块或数据结构。
+function formatPrice(val) { // 声明当前函数入口。
+  if (val == null) return '-' // 根据条件判断是否执行分支。
+  return `${val} 万` // 返回当前表达式结果。
+} // 结束当前代码块或数据结构。
 // 函数功能：格式化单价展示文本。
-function formatUnitPrice(val) { // 逐行注释：声明当前函数入口。
-  if (val == null) return '-' // 逐行注释：根据条件判断是否执行分支。
-  return `${val} 元/㎡` // 逐行注释：返回当前表达式结果。
-} // 逐行注释：结束当前代码块或数据结构。
+function formatUnitPrice(val) { // 声明当前函数入口。
+  if (val == null) return '-' // 根据条件判断是否执行分支。
+  return `${val} 元/㎡` // 返回当前表达式结果。
+} // 结束当前代码块或数据结构。
 // 函数功能：格式化面积展示文本。
-function formatArea(val) { // 逐行注释：声明当前函数入口。
-  if (val == null) return '-' // 逐行注释：根据条件判断是否执行分支。
-  return `${val} ㎡` // 逐行注释：返回当前表达式结果。
-} // 逐行注释：结束当前代码块或数据结构。
+function formatArea(val) { // 声明当前函数入口。
+  if (val == null) return '-' // 根据条件判断是否执行分支。
+  return `${val} ㎡` // 返回当前表达式结果。
+} // 结束当前代码块或数据结构。
 </script>
 
 <template>
@@ -837,34 +837,34 @@ function formatArea(val) { // 逐行注释：声明当前函数入口。
 </template>
 
 <style scoped>
-.admin-page { /* 逐行注释：开始当前样式规则块。 */
-  max-width: 1280px; /* 逐行注释：设置当前样式属性。 */
-  margin: 0 auto; /* 逐行注释：设置当前样式属性。 */
-  padding: 24px 20px 40px; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
+.admin-page { /* 开始当前样式规则块。 */
+  max-width: 1280px; /* 设置当前样式属性。 */
+  margin: 0 auto; /* 设置当前样式属性。 */
+  padding: 24px 20px 40px; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
 
-.page-header { /* 逐行注释：开始当前样式规则块。 */
-  display: flex; /* 逐行注释：设置当前样式属性。 */
-  align-items: center; /* 逐行注释：设置当前样式属性。 */
-  justify-content: space-between; /* 逐行注释：设置当前样式属性。 */
-  margin-bottom: 20px; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
+.page-header { /* 开始当前样式规则块。 */
+  display: flex; /* 设置当前样式属性。 */
+  align-items: center; /* 设置当前样式属性。 */
+  justify-content: space-between; /* 设置当前样式属性。 */
+  margin-bottom: 20px; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
 
-.page-header h2 { /* 逐行注释：开始当前样式规则块。 */
-  margin: 0; /* 逐行注释：设置当前样式属性。 */
-  font-size: 22px; /* 逐行注释：设置当前样式属性。 */
-  color: #1e3a8a; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
+.page-header h2 { /* 开始当前样式规则块。 */
+  margin: 0; /* 设置当前样式属性。 */
+  font-size: 22px; /* 设置当前样式属性。 */
+  color: #1e3a8a; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
 
-.toolbar { /* 逐行注释：开始当前样式规则块。 */
-  display: flex; /* 逐行注释：设置当前样式属性。 */
-  gap: 12px; /* 逐行注释：设置当前样式属性。 */
-  margin-bottom: 16px; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
+.toolbar { /* 开始当前样式规则块。 */
+  display: flex; /* 设置当前样式属性。 */
+  gap: 12px; /* 设置当前样式属性。 */
+  margin-bottom: 16px; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
 
-.pagination-wrap { /* 逐行注释：开始当前样式规则块。 */
-  display: flex; /* 逐行注释：设置当前样式属性。 */
-  justify-content: flex-end; /* 逐行注释：设置当前样式属性。 */
-  margin-top: 16px; /* 逐行注释：设置当前样式属性。 */
-} /* 逐行注释：结束当前样式规则块。 */
+.pagination-wrap { /* 开始当前样式规则块。 */
+  display: flex; /* 设置当前样式属性。 */
+  justify-content: flex-end; /* 设置当前样式属性。 */
+  margin-top: 16px; /* 设置当前样式属性。 */
+} /* 结束当前样式规则块。 */
 </style>
