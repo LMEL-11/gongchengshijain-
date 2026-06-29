@@ -1,88 +1,89 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/store/auth'
+// 文件功能：定义前端页面路由、登录权限守卫和页面标题同步逻辑。
+import { createRouter, createWebHistory } from 'vue-router' // 逐行注释：导入本行所需的依赖。
+import { useAuthStore } from '@/store/auth' // 逐行注释：导入本行所需的依赖。
 
-const routes = [
-  {
-    path: '/',
-    name: 'screen',
-    component: () => import('@/views/Screen.vue'),
-    meta: { title: '全国二手房数据大屏' },
-  },
-  {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: () => import('@/views/Dashboard.vue'),
-    meta: { title: '房源总览 · 3D 房价地图' },
-  },
-  {
-    path: '/explore',
-    name: 'explore',
-    component: () => import('@/views/Explore.vue'),
-    meta: { title: '房源探索' },
-  },
-  {
-    path: '/property/:id',
-    name: 'property-detail',
-    component: () => import('@/views/PropertyDetail.vue'),
-    meta: { title: '房源详情' },
-  },
-  {
-    path: '/analysis',
-    name: 'analysis',
-    component: () => import('@/views/Analysis.vue'),
-    meta: { title: '数据分析与预测' },
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: () => import('@/views/Login.vue'),
-    meta: { title: '登录' },
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    component: () => import('@/views/Admin.vue'),
-    meta: { title: '管理后台', requiresAdmin: true },
-  },
-]
+const routes = [ // 逐行注释：声明并初始化当前变量。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/', // 逐行注释：配置当前对象字段。
+    name: 'screen', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/Screen.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '全国二手房数据大屏' }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/dashboard', // 逐行注释：配置当前对象字段。
+    name: 'dashboard', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/Dashboard.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '房源总览 · 3D 房价地图' }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/explore', // 逐行注释：配置当前对象字段。
+    name: 'explore', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/Explore.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '房源探索' }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/property/:id', // 逐行注释：配置当前对象字段。
+    name: 'property-detail', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/PropertyDetail.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '房源详情' }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/analysis', // 逐行注释：配置当前对象字段。
+    name: 'analysis', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/Analysis.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '数据分析与预测' }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/login', // 逐行注释：配置当前对象字段。
+    name: 'login', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/Login.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '登录' }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+  { // 逐行注释：执行本行前端逻辑。
+    path: '/admin', // 逐行注释：配置当前对象字段。
+    name: 'admin', // 逐行注释：配置当前对象字段。
+    component: () => import('@/views/Admin.vue'), // 逐行注释：配置当前对象字段。
+    meta: { title: '管理后台', requiresAdmin: true }, // 逐行注释：配置当前对象字段。
+  }, // 逐行注释：结束当前代码块或数据结构。
+] // 逐行注释：结束当前代码块或数据结构。
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-  scrollBehavior: () => ({ top: 0 }),
-})
+const router = createRouter({ // 逐行注释：声明并初始化当前变量。
+  history: createWebHistory(), // 逐行注释：配置当前对象字段。
+  routes, // 逐行注释：继续声明当前列表项或参数项。
+  scrollBehavior: () => ({ top: 0 }), // 逐行注释：配置当前对象字段。
+}) // 逐行注释：执行本行前端逻辑。
 
-router.beforeEach(async (to, from, next) => {
-  const auth = useAuthStore()
+router.beforeEach(async (to, from, next) => { // 逐行注释：执行路由跳转或路由操作。
+  const auth = useAuthStore() // 逐行注释：声明并初始化当前变量。
 
   // 首次导航时尝试从 token 恢复用户信息
-  if (auth.isLoggedIn && !auth.user) {
-    await auth.fetchUser()
-  }
+  if (auth.isLoggedIn && !auth.user) { // 逐行注释：根据条件判断是否执行分支。
+    await auth.fetchUser() // 逐行注释：等待异步操作完成。
+  } // 逐行注释：结束当前代码块或数据结构。
 
   // 1. 已登录用户访问登录页 → 跳到对应首页
-  if (to.name === 'login' && auth.isLoggedIn) {
-    next(auth.isAdmin ? '/admin' : '/')
-    return
-  }
+  if (to.name === 'login' && auth.isLoggedIn) { // 逐行注释：根据条件判断是否执行分支。
+    next(auth.isAdmin ? '/admin' : '/') // 逐行注释：执行本行前端逻辑。
+    return // 逐行注释：返回当前表达式结果。
+  } // 逐行注释：结束当前代码块或数据结构。
 
   // 2. 管理员页面需要 admin 角色
-  if (to.meta.requiresAdmin && !auth.isAdmin) {
-    next('/login')
-    return
-  }
+  if (to.meta.requiresAdmin && !auth.isAdmin) { // 逐行注释：根据条件判断是否执行分支。
+    next('/login') // 逐行注释：执行本行前端逻辑。
+    return // 逐行注释：返回当前表达式结果。
+  } // 逐行注释：结束当前代码块或数据结构。
 
   // 3. 未登录用户只能访问登录页
-  if (!auth.isLoggedIn && to.name !== 'login') {
-    next('/login')
-    return
-  }
+  if (!auth.isLoggedIn && to.name !== 'login') { // 逐行注释：根据条件判断是否执行分支。
+    next('/login') // 逐行注释：执行本行前端逻辑。
+    return // 逐行注释：返回当前表达式结果。
+  } // 逐行注释：结束当前代码块或数据结构。
 
-  next()
-})
+  next() // 逐行注释：执行本行前端逻辑。
+}) // 逐行注释：执行本行前端逻辑。
 
-router.afterEach((to) => {
-  document.title = to.meta.title ? `${to.meta.title} | 智慧房源探索平台` : '智慧房源探索平台'
-})
+router.afterEach((to) => { // 逐行注释：执行路由跳转或路由操作。
+  document.title = to.meta.title ? `${to.meta.title} | 智慧房源探索平台` : '智慧房源探索平台' // 逐行注释：赋值或更新当前变量/状态。
+}) // 逐行注释：执行本行前端逻辑。
 
-export default router
+export default router // 逐行注释：导出当前变量、函数或配置。

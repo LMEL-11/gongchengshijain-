@@ -1,49 +1,77 @@
-import request from './request'
+// 文件功能：封装前端访问后端城市、房源、统计、认证和管理接口的 API 方法。
+import request from './request' // 逐行注释：导入本行所需的依赖。
 
 // --- 城市 / 行政区 ---
-export const getCities = () => request.get('/cities')
-export const getCityDistricts = (cityId) => request.get(`/cities/${cityId}/districts`)
-export const getDistrictFacilities = (districtId) =>
-  request.get(`/districts/${districtId}/facilities`)
+// 函数功能：请求城市列表数据。
+export const getCities = () => request.get('/cities') // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求指定城市下的区域列表。
+export const getCityDistricts = (cityId) => request.get(`/cities/${cityId}/districts`) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求指定区域的周边配套设施。
+export const getDistrictFacilities = (districtId) => // 逐行注释：导出当前变量、函数或配置。
+  request.get(`/districts/${districtId}/facilities`) // 逐行注释：执行本行前端逻辑。
 
 // --- 房源 ---
-export const getProperties = (params) => request.get('/properties', { params })
-export const getProperty = (id) => request.get(`/properties/${id}`)
+// 函数功能：按筛选条件请求房源列表。
+export const getProperties = (params) => request.get('/properties', { params }) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求单套房源详情。
+export const getProperty = (id) => request.get(`/properties/${id}`) // 逐行注释：导出当前变量、函数或配置。
 
 // --- 统计 / 分析 / 预测 ---
-export const getOverview = () => request.get('/stats/overview')
-export const getDistrictRanking = (cityId) =>
-  request.get('/stats/district-ranking', { params: { city_id: cityId } })
-export const getPriceDistribution = (cityId) =>
-  request.get('/stats/price-distribution', { params: { city_id: cityId } })
-export const getInvestmentRanking = (cityId) =>
-  request.get('/stats/investment', { params: { city_id: cityId } })
-export const getPriceTrend = (districtId) =>
-  request.get('/stats/price-trend', { params: { district_id: districtId } })
-export const getListingProfile = (districtId) =>
-  request.get('/stats/listing-profile', { params: { district_id: districtId } })
-export const predictPrice = (payload) => request.post('/stats/predict', payload)
+// 函数功能：请求总览统计指标。
+export const getOverview = () => request.get('/stats/overview') // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求城市区域均价排行数据。
+export const getDistrictRanking = (cityId) => // 逐行注释：导出当前变量、函数或配置。
+  request.get('/stats/district-ranking', { params: { city_id: cityId } }) // 逐行注释：执行本行前端逻辑。
+// 函数功能：请求城市房源价格分布数据。
+export const getPriceDistribution = (cityId) => // 逐行注释：导出当前变量、函数或配置。
+  request.get('/stats/price-distribution', { params: { city_id: cityId } }) // 逐行注释：执行本行前端逻辑。
+// 函数功能：请求城市区域投资潜力排行数据。
+export const getInvestmentRanking = (cityId) => // 逐行注释：导出当前变量、函数或配置。
+  request.get('/stats/investment', { params: { city_id: cityId } }) // 逐行注释：执行本行前端逻辑。
+// 函数功能：请求指定区域的房价趋势数据。
+export const getPriceTrend = (districtId) => // 逐行注释：导出当前变量、函数或配置。
+  request.get('/stats/price-trend', { params: { district_id: districtId } }) // 逐行注释：执行本行前端逻辑。
+// 函数功能：请求指定区域的挂牌画像数据。
+export const getListingProfile = (districtId) => // 逐行注释：导出当前变量、函数或配置。
+  request.get('/stats/listing-profile', { params: { district_id: districtId } }) // 逐行注释：执行本行前端逻辑。
+// 函数功能：提交房源特征并请求房价预测结果。
+export const predictPrice = (payload) => request.post('/stats/predict', payload) // 逐行注释：导出当前变量、函数或配置。
 
 // --- 全国二手房（大屏） ---
-export const getNationalSummary = () => request.get('/national/summary')
-export const getProvinceStats = () => request.get('/national/provinces')
-export const getCityStats = (province) => request.get('/national/cities', { params: { province } })
+// 函数功能：请求全国大屏总览统计。
+export const getNationalSummary = () => request.get('/national/summary') // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求省份维度统计数据。
+export const getProvinceStats = () => request.get('/national/provinces') // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求指定省份下的城市统计数据。
+export const getCityStats = (province) => request.get('/national/cities', { params: { province } }) // 逐行注释：导出当前变量、函数或配置。
 
 // --- 大屏「真实采集数据」模式（基于 Property 表聚合） ---
-export const getRealSummary = () => request.get('/national/real/summary')
-export const getRealProvinces = () => request.get('/national/real/provinces')
-export const getRealCities = (province) => request.get('/national/real/cities', { params: { province } })
-export const getRealDistricts = (city) => request.get('/national/real/districts', { params: { city } })
-export const getRealAreaProperties = (params) =>
-  request.get('/national/real/area-properties', { params })
+// 函数功能：请求真实采集数据模式的全国总览统计。
+export const getRealSummary = () => request.get('/national/real/summary') // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求真实采集数据模式的省份统计。
+export const getRealProvinces = () => request.get('/national/real/provinces') // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求真实采集数据模式的城市统计。
+export const getRealCities = (province) => request.get('/national/real/cities', { params: { province } }) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求真实采集数据模式的区域统计。
+export const getRealDistricts = (city) => request.get('/national/real/districts', { params: { city } }) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求指定真实区域的房源点位和列表。
+export const getRealAreaProperties = (params) => // 逐行注释：导出当前变量、函数或配置。
+  request.get('/national/real/area-properties', { params }) // 逐行注释：执行本行前端逻辑。
 
 // --- 认证 ---
-export const login = (username, password) => request.post('/auth/login', { username, password })
-export const getMe = () => request.get('/auth/me')
+// 函数功能：提交账号密码并请求登录结果。
+export const login = (username, password) => request.post('/auth/login', { username, password }) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求当前登录用户信息。
+export const getMe = () => request.get('/auth/me') // 逐行注释：导出当前变量、函数或配置。
 
 // --- 管理后台 ---
-export const adminGetProperties = (params) => request.get('/admin/properties', { params })
-export const adminGetProperty = (id) => request.get(`/admin/properties/${id}`)
-export const adminCreateProperty = (data) => request.post('/admin/properties', data)
-export const adminUpdateProperty = (id, data) => request.put(`/admin/properties/${id}`, data)
-export const adminDeleteProperty = (id) => request.delete(`/admin/properties/${id}`)
+// 函数功能：请求后台房源分页列表。
+export const adminGetProperties = (params) => request.get('/admin/properties', { params }) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求后台单套房源详情。
+export const adminGetProperty = (id) => request.get(`/admin/properties/${id}`) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：提交后台新增房源数据。
+export const adminCreateProperty = (data) => request.post('/admin/properties', data) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：提交后台更新房源数据。
+export const adminUpdateProperty = (id, data) => request.put(`/admin/properties/${id}`, data) // 逐行注释：导出当前变量、函数或配置。
+// 函数功能：请求后台删除指定房源。
+export const adminDeleteProperty = (id) => request.delete(`/admin/properties/${id}`) // 逐行注释：导出当前变量、函数或配置。

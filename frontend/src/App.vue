@@ -1,26 +1,29 @@
+<!-- 文件功能：定义应用根布局、顶部导航、登录状态展示和页面切换容器。 -->
 <script setup>
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/store/auth'
+import { computed } from 'vue' // 逐行注释：导入本行所需的依赖。
+import { useRoute, useRouter } from 'vue-router' // 逐行注释：导入本行所需的依赖。
+import { useAuthStore } from '@/store/auth' // 逐行注释：导入本行所需的依赖。
 
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
+const route = useRoute() // 逐行注释：声明并初始化当前变量。
+const router = useRouter() // 逐行注释：声明并初始化当前变量。
+const auth = useAuthStore() // 逐行注释：声明并初始化当前变量。
 
-const navItems = [
-  { name: 'screen', label: '数据大屏', icon: 'DataBoard' },
-  { name: 'dashboard', label: '房源总览', icon: 'HomeFilled' },
-  { name: 'explore', label: '房源探索', icon: 'Search' },
-  { name: 'analysis', label: '数据分析', icon: 'TrendCharts' },
-]
+const navItems = [ // 逐行注释：声明并初始化当前变量。
+  { name: 'screen', label: '数据大屏', icon: 'DataBoard' }, // 逐行注释：配置当前对象字段。
+  { name: 'dashboard', label: '房源总览', icon: 'HomeFilled' }, // 逐行注释：配置当前对象字段。
+  { name: 'explore', label: '房源探索', icon: 'Search' }, // 逐行注释：配置当前对象字段。
+  { name: 'analysis', label: '数据分析', icon: 'TrendCharts' }, // 逐行注释：配置当前对象字段。
+] // 逐行注释：结束当前代码块或数据结构。
 
-const adminNavItem = computed(() => {
-  if (!auth.isAdmin) return []
-  return [{ name: 'admin', label: '管理后台', icon: 'Setting' }]
-})
+// 函数功能：根据登录用户角色计算管理员导航项。
+const adminNavItem = computed(() => { // 逐行注释：声明并初始化当前变量。
+  if (!auth.isAdmin) return [] // 逐行注释：根据条件判断是否执行分支。
+  return [{ name: 'admin', label: '管理后台', icon: 'Setting' }] // 逐行注释：返回当前表达式结果。
+}) // 逐行注释：执行本行前端逻辑。
 
 // 大屏页、登录页为全屏布局，隐藏通用页头/页脚。
-const bare = computed(() => route.name === 'screen' || route.name === 'login')
+// 函数功能：判断当前页面是否使用无导航的全屏布局。
+const bare = computed(() => route.name === 'screen' || route.name === 'login') // 逐行注释：声明并初始化当前变量。
 </script>
 
 <template>
@@ -85,105 +88,105 @@ const bare = computed(() => route.name === 'screen' || route.name === 'login')
 </template>
 
 <style scoped>
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
+.app-shell { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  flex-direction: column; /* 逐行注释：设置当前样式属性。 */
+  min-height: 100%; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.app-header {
-  background: linear-gradient(90deg, #1e3a8a, #2563eb);
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(30, 58, 138, 0.25);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+.app-header { /* 逐行注释：开始当前样式规则块。 */
+  background: linear-gradient(90deg, #1e3a8a, #2563eb); /* 逐行注释：设置当前样式属性。 */
+  color: #fff; /* 逐行注释：设置当前样式属性。 */
+  box-shadow: 0 2px 12px rgba(30, 58, 138, 0.25); /* 逐行注释：设置当前样式属性。 */
+  position: sticky; /* 逐行注释：设置当前样式属性。 */
+  top: 0; /* 逐行注释：设置当前样式属性。 */
+  z-index: 100; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  height: 60px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.header-inner { /* 逐行注释：开始当前样式规则块。 */
+  max-width: 1280px; /* 逐行注释：设置当前样式属性。 */
+  margin: 0 auto; /* 逐行注释：设置当前样式属性。 */
+  height: 60px; /* 逐行注释：设置当前样式属性。 */
+  padding: 0 20px; /* 逐行注释：设置当前样式属性。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  align-items: center; /* 逐行注释：设置当前样式属性。 */
+  justify-content: space-between; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
+.brand { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  align-items: center; /* 逐行注释：设置当前样式属性。 */
+  gap: 10px; /* 逐行注释：设置当前样式属性。 */
+  font-size: 19px; /* 逐行注释：设置当前样式属性。 */
+  font-weight: 700; /* 逐行注释：设置当前样式属性。 */
+  letter-spacing: 0.5px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.nav {
-  display: flex;
-  gap: 6px;
-}
+.nav { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  gap: 6px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 15px;
-  opacity: 0.85;
-  transition: all 0.2s;
-}
+.nav-link { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  align-items: center; /* 逐行注释：设置当前样式属性。 */
+  gap: 6px; /* 逐行注释：设置当前样式属性。 */
+  padding: 8px 16px; /* 逐行注释：设置当前样式属性。 */
+  border-radius: 8px; /* 逐行注释：设置当前样式属性。 */
+  font-size: 15px; /* 逐行注释：设置当前样式属性。 */
+  opacity: 0.85; /* 逐行注释：设置当前样式属性。 */
+  transition: all 0.2s; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.nav-link:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.12);
-}
+.nav-link:hover { /* 逐行注释：开始当前样式规则块。 */
+  opacity: 1; /* 逐行注释：设置当前样式属性。 */
+  background: rgba(255, 255, 255, 0.12); /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.nav-link.active {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: 600;
-}
+.nav-link.active { /* 逐行注释：开始当前样式规则块。 */
+  opacity: 1; /* 逐行注释：设置当前样式属性。 */
+  background: rgba(255, 255, 255, 0.2); /* 逐行注释：设置当前样式属性。 */
+  font-weight: 600; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.app-main {
-  flex: 1;
-}
+.app-main { /* 逐行注释：开始当前样式规则块。 */
+  flex: 1; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.app-footer {
-  text-align: center;
-  padding: 20px;
-  color: #94a3b8;
-  font-size: 13px;
-}
+.app-footer { /* 逐行注释：开始当前样式规则块。 */
+  text-align: center; /* 逐行注释：设置当前样式属性。 */
+  padding: 20px; /* 逐行注释：设置当前样式属性。 */
+  color: #94a3b8; /* 逐行注释：设置当前样式属性。 */
+  font-size: 13px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.18s ease;
-}
+.fade-enter-active, /* 逐行注释：声明当前样式规则。 */
+.fade-leave-active { /* 逐行注释：开始当前样式规则块。 */
+  transition: opacity 0.18s ease; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+.fade-enter-from, /* 逐行注释：声明当前样式规则。 */
+.fade-leave-to { /* 逐行注释：开始当前样式规则块。 */
+  opacity: 0; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
 /* ---- user area ---- */
-.user-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.user-area { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  align-items: center; /* 逐行注释：设置当前样式属性。 */
+  gap: 12px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.user-greeting {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-}
+.user-greeting { /* 逐行注释：开始当前样式规则块。 */
+  color: rgba(255, 255, 255, 0.9); /* 逐行注释：设置当前样式属性。 */
+  font-size: 14px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.user-area .el-button {
-  color: rgba(255, 255, 255, 0.85);
-}
+.user-area .el-button { /* 逐行注释：开始当前样式规则块。 */
+  color: rgba(255, 255, 255, 0.85); /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 
-.login-link {
-  font-size: 14px;
-}
+.login-link { /* 逐行注释：开始当前样式规则块。 */
+  font-size: 14px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 </style>

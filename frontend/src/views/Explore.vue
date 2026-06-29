@@ -1,127 +1,134 @@
+<!-- 文件功能：实现房源探索页面，支持条件筛选、分页列表和详情跳转。 -->
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onMounted, reactive, ref, watch } from 'vue' // 逐行注释：导入本行所需的依赖。
+import { useRoute, useRouter } from 'vue-router' // 逐行注释：导入本行所需的依赖。
 
-import { getCityDistricts, getProperties } from '@/api'
-import RegionSelector from '@/components/RegionSelector.vue'
-import { useAppStore } from '@/store/app'
+import { getCityDistricts, getProperties } from '@/api' // 逐行注释：导入本行所需的依赖。
+import RegionSelector from '@/components/RegionSelector.vue' // 逐行注释：导入本行所需的依赖。
+import { useAppStore } from '@/store/app' // 逐行注释：导入本行所需的依赖。
 
-const store = useAppStore()
-const route = useRoute()
-const router = useRouter()
+const store = useAppStore() // 逐行注释：声明并初始化当前变量。
+const route = useRoute() // 逐行注释：声明并初始化当前变量。
+const router = useRouter() // 逐行注释：声明并初始化当前变量。
 
-const districts = ref([])
-const list = ref([])
-const total = ref(0)
-const loading = ref(false)
-const selectedProvince = ref('')
-let changingCity = false
+const districts = ref([]) // 逐行注释：声明并初始化当前变量。
+const list = ref([]) // 逐行注释：声明并初始化当前变量。
+const total = ref(0) // 逐行注释：声明并初始化当前变量。
+const loading = ref(false) // 逐行注释：声明并初始化当前变量。
+const selectedProvince = ref('') // 逐行注释：声明并初始化当前变量。
+let changingCity = false // 逐行注释：声明并初始化当前变量。
 
-const filters = reactive({
-  city_id: Number(route.query.city_id) || null,
-  district_id: Number(route.query.district_id) || null,
-  rooms: null,
-  keyword: '',
-  sort: 'price_asc',
-  min_total_price: null,
-  max_total_price: null,
-  page: 1,
-  page_size: 12,
-})
+const filters = reactive({ // 逐行注释：声明并初始化当前变量。
+  city_id: Number(route.query.city_id) || null, // 逐行注释：配置当前对象字段。
+  district_id: Number(route.query.district_id) || null, // 逐行注释：配置当前对象字段。
+  rooms: null, // 逐行注释：配置当前对象字段。
+  keyword: '', // 逐行注释：配置当前对象字段。
+  sort: 'price_asc', // 逐行注释：配置当前对象字段。
+  min_total_price: null, // 逐行注释：配置当前对象字段。
+  max_total_price: null, // 逐行注释：配置当前对象字段。
+  page: 1, // 逐行注释：配置当前对象字段。
+  page_size: 12, // 逐行注释：配置当前对象字段。
+}) // 逐行注释：执行本行前端逻辑。
 
-const roomOptions = [
-  { label: '不限', value: null },
-  { label: '1 室', value: 1 },
-  { label: '2 室', value: 2 },
-  { label: '3 室', value: 3 },
-  { label: '4 室及以上', value: 4 },
-]
-const sortOptions = [
-  { label: '总价从低到高', value: 'price_asc' },
-  { label: '总价从高到低', value: 'price_desc' },
-  { label: '面积优先', value: 'area_desc' },
-  { label: '最新发布', value: 'newest' },
-]
+const roomOptions = [ // 逐行注释：声明并初始化当前变量。
+  { label: '不限', value: null }, // 逐行注释：配置当前对象字段。
+  { label: '1 室', value: 1 }, // 逐行注释：配置当前对象字段。
+  { label: '2 室', value: 2 }, // 逐行注释：配置当前对象字段。
+  { label: '3 室', value: 3 }, // 逐行注释：配置当前对象字段。
+  { label: '4 室及以上', value: 4 }, // 逐行注释：配置当前对象字段。
+] // 逐行注释：结束当前代码块或数据结构。
+const sortOptions = [ // 逐行注释：声明并初始化当前变量。
+  { label: '总价从低到高', value: 'price_asc' }, // 逐行注释：配置当前对象字段。
+  { label: '总价从高到低', value: 'price_desc' }, // 逐行注释：配置当前对象字段。
+  { label: '面积优先', value: 'area_desc' }, // 逐行注释：配置当前对象字段。
+  { label: '最新发布', value: 'newest' }, // 逐行注释：配置当前对象字段。
+] // 逐行注释：结束当前代码块或数据结构。
 
-async function loadDistricts() {
-  districts.value = filters.city_id ? await getCityDistricts(filters.city_id) : []
-}
+// 函数功能：根据当前城市加载区域选项。
+async function loadDistricts() { // 逐行注释：声明当前函数入口。
+  districts.value = filters.city_id ? await getCityDistricts(filters.city_id) : [] // 逐行注释：赋值或更新当前变量/状态。
+} // 逐行注释：结束当前代码块或数据结构。
 
-async function fetchList() {
-  if (!filters.city_id) {
-    list.value = []
-    total.value = 0
-    return
-  }
-  loading.value = true
-  try {
-    const params = {}
-    Object.keys(filters).forEach((k) => {
-      const v = filters[k]
-      if (v !== null && v !== '') params[k] = v
-    })
-    const res = await getProperties(params)
-    list.value = res.items
-    total.value = res.total
-  } finally {
-    loading.value = false
-  }
-}
+// 函数功能：按当前筛选和分页条件加载房源列表。
+async function fetchList() { // 逐行注释：声明当前函数入口。
+  if (!filters.city_id) { // 逐行注释：根据条件判断是否执行分支。
+    list.value = [] // 逐行注释：赋值或更新当前变量/状态。
+    total.value = 0 // 逐行注释：赋值或更新当前变量/状态。
+    return // 逐行注释：返回当前表达式结果。
+  } // 逐行注释：结束当前代码块或数据结构。
+  loading.value = true // 逐行注释：赋值或更新当前变量/状态。
+  try { // 逐行注释：开始执行可能失败的逻辑。
+    const params = {} // 逐行注释：声明并初始化当前变量。
+    Object.keys(filters).forEach((k) => { // 逐行注释：执行本行前端逻辑。
+      const v = filters[k] // 逐行注释：声明并初始化当前变量。
+      if (v !== null && v !== '') params[k] = v // 逐行注释：根据条件判断是否执行分支。
+    }) // 逐行注释：执行本行前端逻辑。
+    const res = await getProperties(params) // 逐行注释：声明并初始化当前变量。
+    list.value = res.items // 逐行注释：赋值或更新当前变量/状态。
+    total.value = res.total // 逐行注释：赋值或更新当前变量/状态。
+  } finally { // 逐行注释：执行本行前端逻辑。
+    loading.value = false // 逐行注释：赋值或更新当前变量/状态。
+  } // 逐行注释：结束当前代码块或数据结构。
+} // 逐行注释：结束当前代码块或数据结构。
 
-function applyFilters() {
-  filters.page = 1
-  fetchList()
-}
+// 函数功能：应用筛选条件并重新加载房源列表。
+function applyFilters() { // 逐行注释：声明当前函数入口。
+  filters.page = 1 // 逐行注释：赋值或更新当前变量/状态。
+  fetchList() // 逐行注释：执行本行前端逻辑。
+} // 逐行注释：结束当前代码块或数据结构。
 
-function onPage(p) {
-  filters.page = p
-  fetchList()
-}
+// 函数功能：处理分页页码变化并重新加载房源列表。
+function onPage(p) { // 逐行注释：声明当前函数入口。
+  filters.page = p // 逐行注释：赋值或更新当前变量/状态。
+  fetchList() // 逐行注释：执行本行前端逻辑。
+} // 逐行注释：结束当前代码块或数据结构。
 
-function openDetail(id) {
-  router.push({ name: 'property-detail', params: { id } })
-}
+// 函数功能：跳转到房源详情页面。
+function openDetail(id) { // 逐行注释：声明当前函数入口。
+  router.push({ name: 'property-detail', params: { id } }) // 逐行注释：执行路由跳转或路由操作。
+} // 逐行注释：结束当前代码块或数据结构。
 
-function syncProvinceByCity(cityId) {
-  if (!cityId) return
-  const city = store.cities.find((c) => c.id === cityId)
-  selectedProvince.value = city?.province || ''
-}
+// 函数功能：根据当前城市编号同步选中的省份。
+function syncProvinceByCity(cityId) { // 逐行注释：声明当前函数入口。
+  if (!cityId) return // 逐行注释：根据条件判断是否执行分支。
+  const city = store.cities.find((c) => c.id === cityId) // 逐行注释：声明并初始化当前变量。
+  selectedProvince.value = city?.province || '' // 逐行注释：赋值或更新当前变量/状态。
+} // 逐行注释：结束当前代码块或数据结构。
 
-onMounted(async () => {
-  await store.loadCities()
-  if (!filters.city_id) filters.city_id = store.currentCityId
-  syncProvinceByCity(filters.city_id)
-  await loadDistricts()
-  await fetchList()
-})
+onMounted(async () => { // 逐行注释：注册 Vue 生命周期回调。
+  await store.loadCities() // 逐行注释：等待异步操作完成。
+  if (!filters.city_id) filters.city_id = store.currentCityId // 逐行注释：根据条件判断是否执行分支。
+  syncProvinceByCity(filters.city_id) // 逐行注释：执行本行前端逻辑。
+  await loadDistricts() // 逐行注释：等待异步操作完成。
+  await fetchList() // 逐行注释：等待异步操作完成。
+}) // 逐行注释：执行本行前端逻辑。
 
-watch(
-  () => filters.city_id,
-  async (cityId) => {
-    changingCity = true
-    filters.page = 1
-    filters.district_id = null
-    syncProvinceByCity(cityId)
-    if (cityId) {
-      store.setCity(cityId)
-      await loadDistricts()
-      await fetchList()
-    } else {
-      districts.value = []
-      list.value = []
-      total.value = 0
-    }
-    changingCity = false
-  },
-)
+watch( // 逐行注释：监听响应式数据变化。
+  () => filters.city_id, // 逐行注释：继续声明当前列表项或参数项。
+  async (cityId) => { // 逐行注释：执行本行前端逻辑。
+    changingCity = true // 逐行注释：赋值或更新当前变量/状态。
+    filters.page = 1 // 逐行注释：赋值或更新当前变量/状态。
+    filters.district_id = null // 逐行注释：赋值或更新当前变量/状态。
+    syncProvinceByCity(cityId) // 逐行注释：执行本行前端逻辑。
+    if (cityId) { // 逐行注释：根据条件判断是否执行分支。
+      store.setCity(cityId) // 逐行注释：执行本行前端逻辑。
+      await loadDistricts() // 逐行注释：等待异步操作完成。
+      await fetchList() // 逐行注释：等待异步操作完成。
+    } else { // 逐行注释：执行本行前端逻辑。
+      districts.value = [] // 逐行注释：赋值或更新当前变量/状态。
+      list.value = [] // 逐行注释：赋值或更新当前变量/状态。
+      total.value = 0 // 逐行注释：赋值或更新当前变量/状态。
+    } // 逐行注释：结束当前代码块或数据结构。
+    changingCity = false // 逐行注释：赋值或更新当前变量/状态。
+  }, // 逐行注释：结束当前代码块或数据结构。
+) // 逐行注释：结束当前代码块或数据结构。
 
-watch(
-  () => filters.district_id,
-  () => {
-    if (!changingCity) applyFilters()
-  },
-)
+watch( // 逐行注释：监听响应式数据变化。
+  () => filters.district_id, // 逐行注释：继续声明当前列表项或参数项。
+  () => { // 逐行注释：执行本行前端逻辑。
+    if (!changingCity) applyFilters() // 逐行注释：根据条件判断是否执行分支。
+  }, // 逐行注释：结束当前代码块或数据结构。
+) // 逐行注释：结束当前代码块或数据结构。
 </script>
 
 <template>
@@ -204,78 +211,78 @@ watch(
 </template>
 
 <style scoped>
-.filter-bar {
-  margin-bottom: 16px;
-}
-.filters :deep(.el-form-item) {
-  margin-bottom: 8px;
-}
-.result-meta {
-  margin: 4px 4px 14px;
-}
-.prop-card {
-  background: #fff;
-  border-radius: var(--card-radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  cursor: pointer;
-  margin-bottom: 16px;
-  transition: transform 0.18s, box-shadow 0.18s;
-}
-.prop-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-}
-.cover {
-  position: relative;
-  height: 132px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.9);
-  background: linear-gradient(135deg, #60a5fa, #2563eb);
-}
-.type-tag {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-}
-.prop-body {
-  padding: 14px;
-}
-.prop-title {
-  font-weight: 600;
-  font-size: 15px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.prop-tags {
-  display: flex;
-  gap: 6px;
-  margin: 10px 0;
-  flex-wrap: wrap;
-}
-.prop-price {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-.total {
-  color: #f5222d;
-  font-weight: 800;
-  font-size: 22px;
-}
-.total small {
-  font-size: 13px;
-  margin-left: 2px;
-}
-.unit {
-  font-size: 12px;
-}
-.pager {
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
-}
+.filter-bar { /* 逐行注释：开始当前样式规则块。 */
+  margin-bottom: 16px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.filters :deep(.el-form-item) { /* 逐行注释：开始当前样式规则块。 */
+  margin-bottom: 8px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.result-meta { /* 逐行注释：开始当前样式规则块。 */
+  margin: 4px 4px 14px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.prop-card { /* 逐行注释：开始当前样式规则块。 */
+  background: #fff; /* 逐行注释：设置当前样式属性。 */
+  border-radius: var(--card-radius); /* 逐行注释：设置当前样式属性。 */
+  box-shadow: var(--shadow); /* 逐行注释：设置当前样式属性。 */
+  overflow: hidden; /* 逐行注释：设置当前样式属性。 */
+  cursor: pointer; /* 逐行注释：设置当前样式属性。 */
+  margin-bottom: 16px; /* 逐行注释：设置当前样式属性。 */
+  transition: transform 0.18s, box-shadow 0.18s; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.prop-card:hover { /* 逐行注释：开始当前样式规则块。 */
+  transform: translateY(-4px); /* 逐行注释：设置当前样式属性。 */
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12); /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.cover { /* 逐行注释：开始当前样式规则块。 */
+  position: relative; /* 逐行注释：设置当前样式属性。 */
+  height: 132px; /* 逐行注释：设置当前样式属性。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  align-items: center; /* 逐行注释：设置当前样式属性。 */
+  justify-content: center; /* 逐行注释：设置当前样式属性。 */
+  color: rgba(255, 255, 255, 0.9); /* 逐行注释：设置当前样式属性。 */
+  background: linear-gradient(135deg, #60a5fa, #2563eb); /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.type-tag { /* 逐行注释：开始当前样式规则块。 */
+  position: absolute; /* 逐行注释：设置当前样式属性。 */
+  top: 10px; /* 逐行注释：设置当前样式属性。 */
+  left: 10px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.prop-body { /* 逐行注释：开始当前样式规则块。 */
+  padding: 14px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.prop-title { /* 逐行注释：开始当前样式规则块。 */
+  font-weight: 600; /* 逐行注释：设置当前样式属性。 */
+  font-size: 15px; /* 逐行注释：设置当前样式属性。 */
+  white-space: nowrap; /* 逐行注释：设置当前样式属性。 */
+  overflow: hidden; /* 逐行注释：设置当前样式属性。 */
+  text-overflow: ellipsis; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.prop-tags { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  gap: 6px; /* 逐行注释：设置当前样式属性。 */
+  margin: 10px 0; /* 逐行注释：设置当前样式属性。 */
+  flex-wrap: wrap; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.prop-price { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  align-items: baseline; /* 逐行注释：设置当前样式属性。 */
+  justify-content: space-between; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.total { /* 逐行注释：开始当前样式规则块。 */
+  color: #f5222d; /* 逐行注释：设置当前样式属性。 */
+  font-weight: 800; /* 逐行注释：设置当前样式属性。 */
+  font-size: 22px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.total small { /* 逐行注释：开始当前样式规则块。 */
+  font-size: 13px; /* 逐行注释：设置当前样式属性。 */
+  margin-left: 2px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.unit { /* 逐行注释：开始当前样式规则块。 */
+  font-size: 12px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
+.pager { /* 逐行注释：开始当前样式规则块。 */
+  display: flex; /* 逐行注释：设置当前样式属性。 */
+  justify-content: center; /* 逐行注释：设置当前样式属性。 */
+  margin-top: 12px; /* 逐行注释：设置当前样式属性。 */
+} /* 逐行注释：结束当前样式规则块。 */
 </style>
