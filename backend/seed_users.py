@@ -2,33 +2,33 @@
 
 用法: ``flask seed-users``
 """
-from flask import Flask  # 导入本行所需的模块或对象。
+from flask import Flask
 
-from extensions import db  # 导入本行所需的模块或对象。
-from models.user import User  # 导入本行所需的模块或对象。
+from extensions import db
+from models.user import User
 
 
-def run_seed_users(app: Flask) -> None:  # 声明函数或方法入口。
+def run_seed_users(app: Flask) -> None:
     """创建或更新默认管理员和普通用户账号。"""
-    with app.app_context():  # 进入上下文管理器并自动处理资源。
+    with app.app_context():
         # 若已存在则跳过
-        admin = db.session.query(User).filter_by(username="admin").first()  # 赋值或更新当前变量/字段。
-        if admin is None:  # 根据条件判断是否进入该分支。
-            admin = User(username="admin", role="admin")  # 赋值或更新当前变量/字段。
-            admin.set_password("admin123")  # 执行本行代码逻辑。
-            db.session.add(admin)  # 把对象加入数据库会话等待提交。
-            print("[seed-users] 已创建管理员账户 admin / admin123")  # 执行本行代码逻辑。
-        else:  # 处理条件不满足时的兜底分支。
-            print("[seed-users] 管理员账户已存在，跳过")  # 执行本行代码逻辑。
+        admin = db.session.query(User).filter_by(username="admin").first()
+        if admin is None:
+            admin = User(username="admin", role="admin")
+            admin.set_password("admin123")
+            db.session.add(admin)
+            print("[seed-users] 已创建管理员账户 admin / admin123")
+        else:
+            print("[seed-users] 管理员账户已存在，跳过")
 
-        user = db.session.query(User).filter_by(username="user").first()  # 赋值或更新当前变量/字段。
-        if user is None:  # 根据条件判断是否进入该分支。
-            user = User(username="user", role="user")  # 赋值或更新当前变量/字段。
-            user.set_password("user123")  # 执行本行代码逻辑。
-            db.session.add(user)  # 把对象加入数据库会话等待提交。
-            print("[seed-users] 已创建普通用户账户 user / user123")  # 执行本行代码逻辑。
-        else:  # 处理条件不满足时的兜底分支。
-            print("[seed-users] 普通用户账户已存在，跳过")  # 执行本行代码逻辑。
+        user = db.session.query(User).filter_by(username="user").first()
+        if user is None:
+            user = User(username="user", role="user")
+            user.set_password("user123")
+            db.session.add(user)
+            print("[seed-users] 已创建普通用户账户 user / user123")
+        else:
+            print("[seed-users] 普通用户账户已存在，跳过")
 
-        db.session.commit()  # 提交当前数据库事务。
-        print("[seed-users] ✅ 完成。请在生产环境中修改默认密码！")  # 执行本行代码逻辑。
+        db.session.commit()
+        print("[seed-users] ✅ 完成。请在生产环境中修改默认密码！")

@@ -1,96 +1,96 @@
 <!-- 文件功能：实现房源详情页面，展示基础信息、交易信息和周边配套。 -->
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue' // 导入本行所需的依赖。
-import { useRoute, useRouter } from 'vue-router' // 导入本行所需的依赖。
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import { getProperty } from '@/api' // 导入本行所需的依赖。
+import { getProperty } from '@/api'
 
-const route = useRoute() // 声明并初始化当前变量。
-const router = useRouter() // 声明并初始化当前变量。
+const route = useRoute()
+const router = useRouter()
 
-const prop = ref(null) // 声明并初始化当前变量。
-const loading = ref(true) // 声明并初始化当前变量。
+const prop = ref(null)
+const loading = ref(true)
 
-const categoryIcon = { // 声明并初始化当前变量。
-  school: 'Reading', // 配置当前对象字段。
-  hospital: 'FirstAidKit', // 配置当前对象字段。
-  subway: 'Van', // 配置当前对象字段。
-  transport: 'MapLocation', // 配置当前对象字段。
-  mall: 'ShoppingCart', // 配置当前对象字段。
-  park: 'Sunny', // 配置当前对象字段。
-} // 结束当前代码块或数据结构。
+const categoryIcon = {
+  school: 'Reading',
+  hospital: 'FirstAidKit',
+  subway: 'Van',
+  transport: 'MapLocation',
+  mall: 'ShoppingCart',
+  park: 'Sunny',
+}
 
 // Group facilities by category for display.
 // 函数功能：按设施类型对周边配套进行分组。
-const facilityGroups = computed(() => { // 声明并初始化当前变量。
-  const groups = {} // 声明并初始化当前变量。
-  for (const f of prop.value?.facilities || []) { // 遍历集合或范围并逐项处理。
-    ;(groups[f.category] ||= { label: f.category_label, items: [] }).items.push(f) // 赋值或更新当前变量/状态。
-  } // 结束当前代码块或数据结构。
-  return groups // 返回当前表达式结果。
-}) // 执行本行前端逻辑。
+const facilityGroups = computed(() => {
+  const groups = {}
+  for (const f of prop.value?.facilities || []) {
+    ;(groups[f.category] ||= { label: f.category_label, items: [] }).items.push(f)
+  }
+  return groups
+})
 
 // 函数功能：整理房源基础规格信息用于详情展示。
-const specs = computed(() => { // 声明并初始化当前变量。
-  const p = prop.value // 声明并初始化当前变量。
-  if (!p) return [] // 根据条件判断是否执行分支。
-  const floor = // 声明并初始化当前变量。
-    p.floor && p.total_floors // 执行本行前端逻辑。
-      ? `${p.floor}/${p.total_floors} 层` // 执行本行前端逻辑。
-      : p.total_floors // 执行本行前端逻辑。
-        ? `共 ${p.total_floors} 层` // 执行本行前端逻辑。
-        : '暂无' // 执行本行前端逻辑。
-  return [ // 返回当前表达式结果。
-    { label: '户型', value: p.layout }, // 配置当前对象字段。
-    { label: '建筑面积', value: p.area ? `${p.area} ㎡` : '暂无' }, // 配置当前对象字段。
-    { label: '楼层', value: floor }, // 配置当前对象字段。
-    { label: '朝向', value: p.orientation || '暂无' }, // 配置当前对象字段。
-    { label: '装修', value: p.decoration || '暂无' }, // 配置当前对象字段。
-    { label: '电梯', value: p.has_elevator ? '有' : '无' }, // 配置当前对象字段。
-    { label: '建成年份', value: p.build_year ? `${p.build_year} 年` : '暂无' }, // 配置当前对象字段。
-    { label: '类型', value: p.listing_type }, // 配置当前对象字段。
-  ] // 结束当前代码块或数据结构。
-}) // 执行本行前端逻辑。
+const specs = computed(() => {
+  const p = prop.value
+  if (!p) return []
+  const floor =
+    p.floor && p.total_floors
+      ? `${p.floor}/${p.total_floors} 层`
+      : p.total_floors
+        ? `共 ${p.total_floors} 层`
+        : '暂无'
+  return [
+    { label: '户型', value: p.layout },
+    { label: '建筑面积', value: p.area ? `${p.area} ㎡` : '暂无' },
+    { label: '楼层', value: floor },
+    { label: '朝向', value: p.orientation || '暂无' },
+    { label: '装修', value: p.decoration || '暂无' },
+    { label: '电梯', value: p.has_elevator ? '有' : '无' },
+    { label: '建成年份', value: p.build_year ? `${p.build_year} 年` : '暂无' },
+    { label: '类型', value: p.listing_type },
+  ]
+})
 
 // 函数功能：整理房源交易摘要信息。
-const transactionSummary = computed(() => { // 声明并初始化当前变量。
-  const t = prop.value?.transaction || {} // 声明并初始化当前变量。
-  return [ // 返回当前表达式结果。
-    { label: '挂牌时间', value: t.listing_date }, // 配置当前对象字段。
-    { label: '交易权属', value: t.ownership_type }, // 配置当前对象字段。
-    { label: '产权情况', value: t.property_right }, // 配置当前对象字段。
-    { label: '抵押信息', value: t.mortgage }, // 配置当前对象字段。
-  ].filter((item) => item.value) // 执行本行前端逻辑。
-}) // 执行本行前端逻辑。
+const transactionSummary = computed(() => {
+  const t = prop.value?.transaction || {}
+  return [
+    { label: '挂牌时间', value: t.listing_date },
+    { label: '交易权属', value: t.ownership_type },
+    { label: '产权情况', value: t.property_right },
+    { label: '抵押信息', value: t.mortgage },
+  ].filter((item) => item.value)
+})
 
 // 函数功能：整理房源交易长文本说明。
-const transactionTexts = computed(() => { // 声明并初始化当前变量。
-  const t = prop.value?.transaction || {} // 声明并初始化当前变量。
-  return [ // 返回当前表达式结果。
-    { title: '核心卖点', value: t.selling_point }, // 配置当前对象字段。
-    { title: '小区介绍', value: t.community_intro }, // 配置当前对象字段。
-    { title: '户型介绍', value: t.layout_intro }, // 配置当前对象字段。
-    { title: '交通出行', value: t.transport_intro }, // 配置当前对象字段。
-  ].filter((item) => item.value) // 执行本行前端逻辑。
-}) // 执行本行前端逻辑。
+const transactionTexts = computed(() => {
+  const t = prop.value?.transaction || {}
+  return [
+    { title: '核心卖点', value: t.selling_point },
+    { title: '小区介绍', value: t.community_intro },
+    { title: '户型介绍', value: t.layout_intro },
+    { title: '交通出行', value: t.transport_intro },
+  ].filter((item) => item.value)
+})
 
 // 函数功能：判断房源是否包含可展示的交易扩展信息。
-const hasTransaction = computed( // 声明并初始化当前变量。
-  () => transactionSummary.value.length || transactionTexts.value.length, // 继续声明当前列表项或参数项。
-) // 结束当前代码块或数据结构。
+const hasTransaction = computed(
+  () => transactionSummary.value.length || transactionTexts.value.length,
+)
 
 // 函数功能：加载当前页面所需的详情或统计数据。
-async function load(id) { // 声明当前函数入口。
-  loading.value = true // 赋值或更新当前变量/状态。
-  try { // 开始执行可能失败的逻辑。
-    prop.value = await getProperty(id) // 赋值或更新当前变量/状态。
-  } finally { // 执行本行前端逻辑。
-    loading.value = false // 赋值或更新当前变量/状态。
-  } // 结束当前代码块或数据结构。
-} // 结束当前代码块或数据结构。
+async function load(id) {
+  loading.value = true
+  try {
+    prop.value = await getProperty(id)
+  } finally {
+    loading.value = false
+  }
+}
 
-onMounted(() => load(route.params.id)) // 注册 Vue 生命周期回调。
-watch(() => route.params.id, (id) => id && load(id)) // 监听响应式数据变化。
+onMounted(() => load(route.params.id))
+watch(() => route.params.id, (id) => id && load(id))
 </script>
 
 <template>
@@ -177,97 +177,97 @@ watch(() => route.params.id, (id) => id && load(id)) // 监听响应式数据变
 </template>
 
 <style scoped>
-.back { /* 开始当前样式规则块。 */
-  margin-bottom: 8px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.head { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  align-items: center; /* 设置当前样式属性。 */
-  justify-content: space-between; /* 设置当前样式属性。 */
-  margin-bottom: 16px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.head-main h1 { /* 开始当前样式规则块。 */
-  margin: 0 0 10px; /* 设置当前样式属性。 */
-  font-size: 24px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.loc { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  align-items: center; /* 设置当前样式属性。 */
-  gap: 6px; /* 设置当前样式属性。 */
-  color: #475569; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.head-price { /* 开始当前样式规则块。 */
-  text-align: right; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.head-price .total { /* 开始当前样式规则块。 */
-  font-size: 34px; /* 设置当前样式属性。 */
-  font-weight: 800; /* 设置当前样式属性。 */
-  color: #f5222d; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.head-price .total small { /* 开始当前样式规则块。 */
-  font-size: 15px; /* 设置当前样式属性。 */
-  margin-left: 4px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.specs { /* 开始当前样式规则块。 */
-  display: grid; /* 设置当前样式属性。 */
-  grid-template-columns: repeat(2, 1fr); /* 设置当前样式属性。 */
-  gap: 18px 12px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.spec-label { /* 开始当前样式规则块。 */
-  font-size: 13px; /* 设置当前样式属性。 */
-  margin-bottom: 4px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.spec-value { /* 开始当前样式规则块。 */
-  font-size: 16px; /* 设置当前样式属性。 */
-  font-weight: 600; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.transaction-grid { /* 开始当前样式规则块。 */
-  display: grid; /* 设置当前样式属性。 */
-  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 设置当前样式属性。 */
-  gap: 16px 12px; /* 设置当前样式属性。 */
-  margin-bottom: 18px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.transaction-item { /* 开始当前样式规则块。 */
-  min-width: 0; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.detail-texts { /* 开始当前样式规则块。 */
-  display: grid; /* 设置当前样式属性。 */
-  gap: 14px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.detail-title { /* 开始当前样式规则块。 */
-  margin-bottom: 6px; /* 设置当前样式属性。 */
-  color: #1e3a8a; /* 设置当前样式属性。 */
-  font-weight: 700; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.detail-text p { /* 开始当前样式规则块。 */
-  margin: 0; /* 设置当前样式属性。 */
-  color: #334155; /* 设置当前样式属性。 */
-  line-height: 1.8; /* 设置当前样式属性。 */
-  word-break: break-word; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.tip { /* 开始当前样式规则块。 */
-  margin: -6px 0 14px; /* 设置当前样式属性。 */
-  font-size: 13px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.fac-group { /* 开始当前样式规则块。 */
-  margin-bottom: 16px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.fac-head { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  align-items: center; /* 设置当前样式属性。 */
-  gap: 6px; /* 设置当前样式属性。 */
-  font-weight: 600; /* 设置当前样式属性。 */
-  margin-bottom: 8px; /* 设置当前样式属性。 */
-  color: #1e3a8a; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.fac-items { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  flex-wrap: wrap; /* 设置当前样式属性。 */
-  gap: 8px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-@media (max-width: 768px) { /* 声明响应式媒体查询规则。 */
-  .transaction-grid { /* 开始当前样式规则块。 */
-    grid-template-columns: 1fr; /* 设置当前样式属性。 */
-  } /* 结束当前样式规则块。 */
-} /* 结束当前样式规则块。 */
+.back {
+  margin-bottom: 8px;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.head-main h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+.loc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+}
+.head-price {
+  text-align: right;
+}
+.head-price .total {
+  font-size: 34px;
+  font-weight: 800;
+  color: #f5222d;
+}
+.head-price .total small {
+  font-size: 15px;
+  margin-left: 4px;
+}
+.specs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 12px;
+}
+.spec-label {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.spec-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+.transaction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 12px;
+  margin-bottom: 18px;
+}
+.transaction-item {
+  min-width: 0;
+}
+.detail-texts {
+  display: grid;
+  gap: 14px;
+}
+.detail-title {
+  margin-bottom: 6px;
+  color: #1e3a8a;
+  font-weight: 700;
+}
+.detail-text p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.8;
+  word-break: break-word;
+}
+.tip {
+  margin: -6px 0 14px;
+  font-size: 13px;
+}
+.fac-group {
+  margin-bottom: 16px;
+}
+.fac-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1e3a8a;
+}
+.fac-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 768px) {
+  .transaction-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

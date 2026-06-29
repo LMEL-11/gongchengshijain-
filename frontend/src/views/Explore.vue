@@ -1,134 +1,134 @@
 <!-- 文件功能：实现房源探索页面，支持条件筛选、分页列表和详情跳转。 -->
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue' // 导入本行所需的依赖。
-import { useRoute, useRouter } from 'vue-router' // 导入本行所需的依赖。
+import { onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import { getCityDistricts, getProperties } from '@/api' // 导入本行所需的依赖。
-import RegionSelector from '@/components/RegionSelector.vue' // 导入本行所需的依赖。
-import { useAppStore } from '@/store/app' // 导入本行所需的依赖。
+import { getCityDistricts, getProperties } from '@/api'
+import RegionSelector from '@/components/RegionSelector.vue'
+import { useAppStore } from '@/store/app'
 
-const store = useAppStore() // 声明并初始化当前变量。
-const route = useRoute() // 声明并初始化当前变量。
-const router = useRouter() // 声明并初始化当前变量。
+const store = useAppStore()
+const route = useRoute()
+const router = useRouter()
 
-const districts = ref([]) // 声明并初始化当前变量。
-const list = ref([]) // 声明并初始化当前变量。
-const total = ref(0) // 声明并初始化当前变量。
-const loading = ref(false) // 声明并初始化当前变量。
-const selectedProvince = ref('') // 声明并初始化当前变量。
-let changingCity = false // 声明并初始化当前变量。
+const districts = ref([])
+const list = ref([])
+const total = ref(0)
+const loading = ref(false)
+const selectedProvince = ref('')
+let changingCity = false
 
-const filters = reactive({ // 声明并初始化当前变量。
-  city_id: Number(route.query.city_id) || null, // 配置当前对象字段。
-  district_id: Number(route.query.district_id) || null, // 配置当前对象字段。
-  rooms: null, // 配置当前对象字段。
-  keyword: '', // 配置当前对象字段。
-  sort: 'price_asc', // 配置当前对象字段。
-  min_total_price: null, // 配置当前对象字段。
-  max_total_price: null, // 配置当前对象字段。
-  page: 1, // 配置当前对象字段。
-  page_size: 12, // 配置当前对象字段。
-}) // 执行本行前端逻辑。
+const filters = reactive({
+  city_id: Number(route.query.city_id) || null,
+  district_id: Number(route.query.district_id) || null,
+  rooms: null,
+  keyword: '',
+  sort: 'price_asc',
+  min_total_price: null,
+  max_total_price: null,
+  page: 1,
+  page_size: 12,
+})
 
-const roomOptions = [ // 声明并初始化当前变量。
-  { label: '不限', value: null }, // 配置当前对象字段。
-  { label: '1 室', value: 1 }, // 配置当前对象字段。
-  { label: '2 室', value: 2 }, // 配置当前对象字段。
-  { label: '3 室', value: 3 }, // 配置当前对象字段。
-  { label: '4 室及以上', value: 4 }, // 配置当前对象字段。
-] // 结束当前代码块或数据结构。
-const sortOptions = [ // 声明并初始化当前变量。
-  { label: '总价从低到高', value: 'price_asc' }, // 配置当前对象字段。
-  { label: '总价从高到低', value: 'price_desc' }, // 配置当前对象字段。
-  { label: '面积优先', value: 'area_desc' }, // 配置当前对象字段。
-  { label: '最新发布', value: 'newest' }, // 配置当前对象字段。
-] // 结束当前代码块或数据结构。
+const roomOptions = [
+  { label: '不限', value: null },
+  { label: '1 室', value: 1 },
+  { label: '2 室', value: 2 },
+  { label: '3 室', value: 3 },
+  { label: '4 室及以上', value: 4 },
+]
+const sortOptions = [
+  { label: '总价从低到高', value: 'price_asc' },
+  { label: '总价从高到低', value: 'price_desc' },
+  { label: '面积优先', value: 'area_desc' },
+  { label: '最新发布', value: 'newest' },
+]
 
 // 函数功能：根据当前城市加载区域选项。
-async function loadDistricts() { // 声明当前函数入口。
-  districts.value = filters.city_id ? await getCityDistricts(filters.city_id) : [] // 赋值或更新当前变量/状态。
-} // 结束当前代码块或数据结构。
+async function loadDistricts() {
+  districts.value = filters.city_id ? await getCityDistricts(filters.city_id) : []
+}
 
 // 函数功能：按当前筛选和分页条件加载房源列表。
-async function fetchList() { // 声明当前函数入口。
-  if (!filters.city_id) { // 根据条件判断是否执行分支。
-    list.value = [] // 赋值或更新当前变量/状态。
-    total.value = 0 // 赋值或更新当前变量/状态。
-    return // 返回当前表达式结果。
-  } // 结束当前代码块或数据结构。
-  loading.value = true // 赋值或更新当前变量/状态。
-  try { // 开始执行可能失败的逻辑。
-    const params = {} // 声明并初始化当前变量。
-    Object.keys(filters).forEach((k) => { // 执行本行前端逻辑。
-      const v = filters[k] // 声明并初始化当前变量。
-      if (v !== null && v !== '') params[k] = v // 根据条件判断是否执行分支。
-    }) // 执行本行前端逻辑。
-    const res = await getProperties(params) // 声明并初始化当前变量。
-    list.value = res.items // 赋值或更新当前变量/状态。
-    total.value = res.total // 赋值或更新当前变量/状态。
-  } finally { // 执行本行前端逻辑。
-    loading.value = false // 赋值或更新当前变量/状态。
-  } // 结束当前代码块或数据结构。
-} // 结束当前代码块或数据结构。
+async function fetchList() {
+  if (!filters.city_id) {
+    list.value = []
+    total.value = 0
+    return
+  }
+  loading.value = true
+  try {
+    const params = {}
+    Object.keys(filters).forEach((k) => {
+      const v = filters[k]
+      if (v !== null && v !== '') params[k] = v
+    })
+    const res = await getProperties(params)
+    list.value = res.items
+    total.value = res.total
+  } finally {
+    loading.value = false
+  }
+}
 
 // 函数功能：应用筛选条件并重新加载房源列表。
-function applyFilters() { // 声明当前函数入口。
-  filters.page = 1 // 赋值或更新当前变量/状态。
-  fetchList() // 执行本行前端逻辑。
-} // 结束当前代码块或数据结构。
+function applyFilters() {
+  filters.page = 1
+  fetchList()
+}
 
 // 函数功能：处理分页页码变化并重新加载房源列表。
-function onPage(p) { // 声明当前函数入口。
-  filters.page = p // 赋值或更新当前变量/状态。
-  fetchList() // 执行本行前端逻辑。
-} // 结束当前代码块或数据结构。
+function onPage(p) {
+  filters.page = p
+  fetchList()
+}
 
 // 函数功能：跳转到房源详情页面。
-function openDetail(id) { // 声明当前函数入口。
-  router.push({ name: 'property-detail', params: { id } }) // 执行路由跳转或路由操作。
-} // 结束当前代码块或数据结构。
+function openDetail(id) {
+  router.push({ name: 'property-detail', params: { id } })
+}
 
 // 函数功能：根据当前城市编号同步选中的省份。
-function syncProvinceByCity(cityId) { // 声明当前函数入口。
-  if (!cityId) return // 根据条件判断是否执行分支。
-  const city = store.cities.find((c) => c.id === cityId) // 声明并初始化当前变量。
-  selectedProvince.value = city?.province || '' // 赋值或更新当前变量/状态。
-} // 结束当前代码块或数据结构。
+function syncProvinceByCity(cityId) {
+  if (!cityId) return
+  const city = store.cities.find((c) => c.id === cityId)
+  selectedProvince.value = city?.province || ''
+}
 
-onMounted(async () => { // 注册 Vue 生命周期回调。
-  await store.loadCities() // 等待异步操作完成。
-  if (!filters.city_id) filters.city_id = store.currentCityId // 根据条件判断是否执行分支。
-  syncProvinceByCity(filters.city_id) // 执行本行前端逻辑。
-  await loadDistricts() // 等待异步操作完成。
-  await fetchList() // 等待异步操作完成。
-}) // 执行本行前端逻辑。
+onMounted(async () => {
+  await store.loadCities()
+  if (!filters.city_id) filters.city_id = store.currentCityId
+  syncProvinceByCity(filters.city_id)
+  await loadDistricts()
+  await fetchList()
+})
 
-watch( // 监听响应式数据变化。
-  () => filters.city_id, // 继续声明当前列表项或参数项。
-  async (cityId) => { // 执行本行前端逻辑。
-    changingCity = true // 赋值或更新当前变量/状态。
-    filters.page = 1 // 赋值或更新当前变量/状态。
-    filters.district_id = null // 赋值或更新当前变量/状态。
-    syncProvinceByCity(cityId) // 执行本行前端逻辑。
-    if (cityId) { // 根据条件判断是否执行分支。
-      store.setCity(cityId) // 执行本行前端逻辑。
-      await loadDistricts() // 等待异步操作完成。
-      await fetchList() // 等待异步操作完成。
-    } else { // 执行本行前端逻辑。
-      districts.value = [] // 赋值或更新当前变量/状态。
-      list.value = [] // 赋值或更新当前变量/状态。
-      total.value = 0 // 赋值或更新当前变量/状态。
-    } // 结束当前代码块或数据结构。
-    changingCity = false // 赋值或更新当前变量/状态。
-  }, // 结束当前代码块或数据结构。
-) // 结束当前代码块或数据结构。
+watch(
+  () => filters.city_id,
+  async (cityId) => {
+    changingCity = true
+    filters.page = 1
+    filters.district_id = null
+    syncProvinceByCity(cityId)
+    if (cityId) {
+      store.setCity(cityId)
+      await loadDistricts()
+      await fetchList()
+    } else {
+      districts.value = []
+      list.value = []
+      total.value = 0
+    }
+    changingCity = false
+  },
+)
 
-watch( // 监听响应式数据变化。
-  () => filters.district_id, // 继续声明当前列表项或参数项。
-  () => { // 执行本行前端逻辑。
-    if (!changingCity) applyFilters() // 根据条件判断是否执行分支。
-  }, // 结束当前代码块或数据结构。
-) // 结束当前代码块或数据结构。
+watch(
+  () => filters.district_id,
+  () => {
+    if (!changingCity) applyFilters()
+  },
+)
 </script>
 
 <template>
@@ -211,78 +211,78 @@ watch( // 监听响应式数据变化。
 </template>
 
 <style scoped>
-.filter-bar { /* 开始当前样式规则块。 */
-  margin-bottom: 16px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.filters :deep(.el-form-item) { /* 开始当前样式规则块。 */
-  margin-bottom: 8px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.result-meta { /* 开始当前样式规则块。 */
-  margin: 4px 4px 14px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.prop-card { /* 开始当前样式规则块。 */
-  background: #fff; /* 设置当前样式属性。 */
-  border-radius: var(--card-radius); /* 设置当前样式属性。 */
-  box-shadow: var(--shadow); /* 设置当前样式属性。 */
-  overflow: hidden; /* 设置当前样式属性。 */
-  cursor: pointer; /* 设置当前样式属性。 */
-  margin-bottom: 16px; /* 设置当前样式属性。 */
-  transition: transform 0.18s, box-shadow 0.18s; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.prop-card:hover { /* 开始当前样式规则块。 */
-  transform: translateY(-4px); /* 设置当前样式属性。 */
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12); /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.cover { /* 开始当前样式规则块。 */
-  position: relative; /* 设置当前样式属性。 */
-  height: 132px; /* 设置当前样式属性。 */
-  display: flex; /* 设置当前样式属性。 */
-  align-items: center; /* 设置当前样式属性。 */
-  justify-content: center; /* 设置当前样式属性。 */
-  color: rgba(255, 255, 255, 0.9); /* 设置当前样式属性。 */
-  background: linear-gradient(135deg, #60a5fa, #2563eb); /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.type-tag { /* 开始当前样式规则块。 */
-  position: absolute; /* 设置当前样式属性。 */
-  top: 10px; /* 设置当前样式属性。 */
-  left: 10px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.prop-body { /* 开始当前样式规则块。 */
-  padding: 14px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.prop-title { /* 开始当前样式规则块。 */
-  font-weight: 600; /* 设置当前样式属性。 */
-  font-size: 15px; /* 设置当前样式属性。 */
-  white-space: nowrap; /* 设置当前样式属性。 */
-  overflow: hidden; /* 设置当前样式属性。 */
-  text-overflow: ellipsis; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.prop-tags { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  gap: 6px; /* 设置当前样式属性。 */
-  margin: 10px 0; /* 设置当前样式属性。 */
-  flex-wrap: wrap; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.prop-price { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  align-items: baseline; /* 设置当前样式属性。 */
-  justify-content: space-between; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.total { /* 开始当前样式规则块。 */
-  color: #f5222d; /* 设置当前样式属性。 */
-  font-weight: 800; /* 设置当前样式属性。 */
-  font-size: 22px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.total small { /* 开始当前样式规则块。 */
-  font-size: 13px; /* 设置当前样式属性。 */
-  margin-left: 2px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.unit { /* 开始当前样式规则块。 */
-  font-size: 12px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
-.pager { /* 开始当前样式规则块。 */
-  display: flex; /* 设置当前样式属性。 */
-  justify-content: center; /* 设置当前样式属性。 */
-  margin-top: 12px; /* 设置当前样式属性。 */
-} /* 结束当前样式规则块。 */
+.filter-bar {
+  margin-bottom: 16px;
+}
+.filters :deep(.el-form-item) {
+  margin-bottom: 8px;
+}
+.result-meta {
+  margin: 4px 4px 14px;
+}
+.prop-card {
+  background: #fff;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.prop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+.cover {
+  position: relative;
+  height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+}
+.type-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+.prop-body {
+  padding: 14px;
+}
+.prop-title {
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prop-tags {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+.prop-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.total {
+  color: #f5222d;
+  font-weight: 800;
+  font-size: 22px;
+}
+.total small {
+  font-size: 13px;
+  margin-left: 2px;
+}
+.unit {
+  font-size: 12px;
+}
+.pager {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
 </style>

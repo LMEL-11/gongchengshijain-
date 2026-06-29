@@ -4,337 +4,346 @@ Source file columns come from ``house_info.tsv``. The importer cleans the raw
 fields and writes data into cities, districts, and properties so existing API
 endpoints can serve the records directly.
 """
-import argparse  # 导入本行所需的模块或对象。
-import csv  # 导入本行所需的模块或对象。
-import math  # 导入本行所需的模块或对象。
-import re  # 导入本行所需的模块或对象。
-from collections import defaultdict  # 导入本行所需的模块或对象。
-from pathlib import Path  # 导入本行所需的模块或对象。
+import argparse
+import csv
+import math
+import re
+from collections import defaultdict
+from pathlib import Path
 
-from sqlalchemy import func  # 导入本行所需的模块或对象。
+from sqlalchemy import func
 
-from app import create_app  # 导入本行所需的模块或对象。
-from extensions import db  # 导入本行所需的模块或对象。
-from models import City, District, Property  # 导入本行所需的模块或对象。
-
-
-BASE_DIR = Path(__file__).resolve().parent  # 赋值或更新当前变量/字段。
-DEFAULT_TSV = BASE_DIR.parent.parent / "house_info.tsv"  # 赋值或更新当前变量/字段。
-SOURCE = "shandong_house_info"  # 赋值或更新当前变量/字段。
-BATCH_SIZE = 3000  # 赋值或更新当前变量/字段。
+from app import create_app
+from extensions import db
+from models import City, District, Property
 
 
-def clean_text(value, default=None, limit=None):  # 声明函数或方法入口。
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_TSV = BASE_DIR.parent.parent / "house_info.tsv"
+SOURCE = "shandong_house_info"
+BATCH_SIZE = 3000
+
+
+def clean_text(value, default=None, limit=None):
     """清理输入文本，统一处理空值、空白和无效占位内容。"""
-    if value is None:  # 根据条件判断是否进入该分支。
-        return default  # 返回当前逻辑的处理结果。
-    text = str(value).replace("\u00a0", " ").strip()  # 赋值或更新当前变量/字段。
-    if not text or text in {"None", "暂无数据", "未知", "未知结构"}:  # 根据条件判断是否进入该分支。
-        return default  # 返回当前逻辑的处理结果。
-    return text[:limit] if limit else text  # 返回当前逻辑的处理结果。
+    if value is None:
+        return default
+    text = str(value).replace("\u00a0", " ").strip()
+    if not text or text in {"None", "暂无数据", "未知", "未知结构"}:
+        return default
+    return text[:limit] if limit else text
 
 
-def parse_float(value):  # 声明函数或方法入口。
+def parse_float(value):
     """从文本中提取可用数字并转换为浮点值。"""
-    text = clean_text(value)  # 赋值或更新当前变量/字段。
-    if not text:  # 根据条件判断是否进入该分支。
-        return None  # 返回当前逻辑的处理结果。
-    match = re.search(r"-?\d+(?:\.\d+)?", text.replace(",", ""))  # 赋值或更新当前变量/字段。
-    if not match:  # 根据条件判断是否进入该分支。
-        return None  # 返回当前逻辑的处理结果。
-    try:  # 开始执行可能出现异常的逻辑。
-        number = float(match.group())  # 赋值或更新当前变量/字段。
-    except ValueError:  # 捕获异常并执行错误处理。
-        return None  # 返回当前逻辑的处理结果。
-    return number if math.isfinite(number) else None  # 返回当前逻辑的处理结果。
+    text = clean_text(value)
+    if not text:
+        return None
+    match = re.search(r"-?\d+(?:\.\d+)?", text.replace(",", ""))
+    if not match:
+        return None
+    try:
+        number = float(match.group())
+    except ValueError:
+        return None
+    return number if math.isfinite(number) else None
 
 
-def parse_layout(value):  # 声明函数或方法入口。
+def parse_layout(value):
     """从户型文本中解析室和厅数量。"""
-    text = clean_text(value, "") or ""  # 赋值或更新当前变量/字段。
-    rooms = halls = 0  # 赋值或更新当前变量/字段。
-    room_match = re.search(r"(\d+)\s*室", text)  # 赋值或更新当前变量/字段。
-    hall_match = re.search(r"(\d+)\s*厅", text)  # 赋值或更新当前变量/字段。
-    if room_match:  # 根据条件判断是否进入该分支。
-        rooms = int(room_match.group(1))  # 赋值或更新当前变量/字段。
-    if hall_match:  # 根据条件判断是否进入该分支。
-        halls = int(hall_match.group(1))  # 赋值或更新当前变量/字段。
-    return rooms, halls  # 返回当前逻辑的处理结果。
+    text = clean_text(value, "") or ""
+    rooms = halls = 0
+    room_match = re.search(r"(\d+)\s*室", text)
+    hall_match = re.search(r"(\d+)\s*厅", text)
+    if room_match:
+        rooms = int(room_match.group(1))
+    if hall_match:
+        halls = int(hall_match.group(1))
+    return rooms, halls
 
 
-def parse_floor(value):  # 声明函数或方法入口。
+def parse_floor(value):
     """从楼层文本中推断所在楼层和总楼层。"""
-    text = clean_text(value, "") or ""  # 赋值或更新当前变量/字段。
-    total_match = re.search(r"共\s*(\d+)\s*层", text)  # 赋值或更新当前变量/字段。
-    total_floors = int(total_match.group(1)) if total_match else None  # 赋值或更新当前变量/字段。
+    text = clean_text(value, "") or ""
+    total_match = re.search(r"共\s*(\d+)\s*层", text)
+    total_floors = int(total_match.group(1)) if total_match else None
 
-    floor = None  # 赋值或更新当前变量/字段。
-    if "低楼层" in text and total_floors:  # 根据条件判断是否进入该分支。
-        floor = max(1, round(total_floors * 0.25))  # 赋值或更新当前变量/字段。
-    elif "中楼层" in text and total_floors:  # 根据条件判断是否进入该分支。
-        floor = max(1, round(total_floors * 0.5))  # 赋值或更新当前变量/字段。
-    elif "高楼层" in text and total_floors:  # 根据条件判断是否进入该分支。
-        floor = max(1, round(total_floors * 0.8))  # 赋值或更新当前变量/字段。
-    else:  # 处理条件不满足时的兜底分支。
-        floor_match = re.search(r"(\d+)\s*层", text)  # 赋值或更新当前变量/字段。
-        if floor_match:  # 根据条件判断是否进入该分支。
-            floor = int(floor_match.group(1))  # 赋值或更新当前变量/字段。
-    return floor, total_floors  # 返回当前逻辑的处理结果。
+    floor = None
+    if "低楼层" in text and total_floors:
+        floor = max(1, round(total_floors * 0.25))
+    elif "中楼层" in text and total_floors:
+        floor = max(1, round(total_floors * 0.5))
+    elif "高楼层" in text and total_floors:
+        floor = max(1, round(total_floors * 0.8))
+    else:
+        floor_match = re.search(r"(\d+)\s*层", text)
+        if floor_match:
+            floor = int(floor_match.group(1))
+    return floor, total_floors
 
 
-def has_elevator(total_floors, elevator_text):  # 声明函数或方法入口。
+def has_elevator(total_floors, elevator_text):
     """根据电梯字段和总楼层判断房源是否有电梯。"""
-    text = clean_text(elevator_text, "") or ""  # 赋值或更新当前变量/字段。
-    if "电梯" in text:  # 根据条件判断是否进入该分支。
-        return True  # 返回当前逻辑的处理结果。
-    return bool(total_floors and total_floors >= 7)  # 返回当前逻辑的处理结果。
+    text = clean_text(elevator_text, "") or ""
+    if "电梯" in text:
+        return True
+    return bool(total_floors and total_floors >= 7)
 
 
-def make_title(row):  # 声明函数或方法入口。
+def make_title(row):
     """根据小区、户型和面积字段生成房源标题。"""
-    community = clean_text(row.get("mingcheng"), "山东房源", 120)  # 赋值或更新当前变量/字段。
-    layout = clean_text(row.get("huxing"), limit=40)  # 赋值或更新当前变量/字段。
-    area = clean_text(row.get("mianji"), limit=20)  # 赋值或更新当前变量/字段。
-    parts = [community]  # 赋值或更新当前变量/字段。
-    if layout:  # 根据条件判断是否进入该分支。
-        parts.append(layout)  # 执行本行代码逻辑。
-    if area:  # 根据条件判断是否进入该分支。
-        parts.append(area)  # 执行本行代码逻辑。
-    return " ".join(parts)[:200]  # 返回当前逻辑的处理结果。
+    community = clean_text(row.get("mingcheng"), "山东房源", 120)
+    layout = clean_text(row.get("huxing"), limit=40)
+    area = clean_text(row.get("mianji"), limit=20)
+    parts = [community]
+    if layout:
+        parts.append(layout)
+    if area:
+        parts.append(area)
+    return " ".join(parts)[:200]
 
 
-def normalized_row(row):  # 声明函数或方法入口。
+def normalized_row(row):
     """清洗并标准化一行原始山东房源数据。"""
-    city = clean_text(row.get("city"), limit=50)  # 赋值或更新当前变量/字段。
-    if not city:  # 根据条件判断是否进入该分支。
-        return None  # 返回当前逻辑的处理结果。
+    # 原始 TSV 同时包含商圈、行政区、价格文本和坐标文本；这里先把它收敛成
+    # Property 入库所需的强类型字段，异常或明显离群的数据直接丢弃。
+    city = clean_text(row.get("city"), limit=50)
+    if not city:
+        return None
 
-    district = (  # 赋值或更新当前变量/字段。
-        clean_text(row.get("quyu"), limit=50)  # 赋值或更新当前变量/字段。
-        or clean_text(row.get("region"), limit=50)  # 赋值或更新当前变量/字段。
-        or "未知区域"  # 执行本行代码逻辑。
-    )  # 结束当前数据结构或调用块。
-    area = parse_float(row.get("mianji"))  # 赋值或更新当前变量/字段。
-    unit_price = parse_float(row.get("price"))  # 赋值或更新当前变量/字段。
-    if (  # 根据条件判断是否进入该分支。
-        not area  # 执行本行代码逻辑。
-        or area < 10  # 执行本行代码逻辑。
-        or area > 1000  # 执行本行代码逻辑。
-        or not unit_price  # 执行本行代码逻辑。
-        or unit_price < 500  # 执行本行代码逻辑。
-    ):  # 开始一个新的缩进代码块。
-        return None  # 返回当前逻辑的处理结果。
+    district = (
+        clean_text(row.get("quyu"), limit=50)
+        or clean_text(row.get("region"), limit=50)
+        or "未知区域"
+    )
+    area = parse_float(row.get("mianji"))
+    unit_price = parse_float(row.get("price"))
+    # 面积和单价是后续统计、地图和预测的核心指标，过滤掉缺失或明显不合理的样本。
+    if (
+        not area
+        or area < 10
+        or area > 1000
+        or not unit_price
+        or unit_price < 500
+    ):
+        return None
 
-    lng = parse_float(row.get("jingdu"))  # 赋值或更新当前变量/字段。
-    lat = parse_float(row.get("weidu"))  # 赋值或更新当前变量/字段。
-    if lng is not None and not (110 <= lng <= 125):  # 根据条件判断是否进入该分支。
-        lng = None  # 赋值或更新当前变量/字段。
-    if lat is not None and not (30 <= lat <= 40):  # 根据条件判断是否进入该分支。
-        lat = None  # 赋值或更新当前变量/字段。
+    lng = parse_float(row.get("jingdu"))
+    lat = parse_float(row.get("weidu"))
+    # 山东采集数据的经纬度应落在大致省域范围内，越界坐标视为无效但不丢弃房源。
+    if lng is not None and not (110 <= lng <= 125):
+        lng = None
+    if lat is not None and not (30 <= lat <= 40):
+        lat = None
 
-    rooms, halls = parse_layout(row.get("huxing"))  # 赋值或更新当前变量/字段。
-    floor, total_floors = parse_floor(row.get("louceng"))  # 赋值或更新当前变量/字段。
-    return {  # 返回当前逻辑的处理结果。
-        "city": city,  # 设置当前数据项或参数。
-        "district": district,  # 设置当前数据项或参数。
-        "title": make_title(row),  # 设置当前数据项或参数。
-        "total_price": round(unit_price * area / 10000, 2),  # 设置当前数据项或参数。
-        "unit_price": round(unit_price),  # 设置当前数据项或参数。
-        "area": round(area, 2),  # 设置当前数据项或参数。
-        "rooms": rooms,  # 设置当前数据项或参数。
-        "halls": halls,  # 设置当前数据项或参数。
-        "floor": floor,  # 设置当前数据项或参数。
-        "total_floors": total_floors,  # 设置当前数据项或参数。
-        "build_year": None,  # 设置当前数据项或参数。
-        "orientation": clean_text(row.get("chaoxiang"), limit=20),  # 赋值或更新当前变量/字段。
-        "decoration": clean_text(row.get("zhuangxiu"), limit=20),  # 赋值或更新当前变量/字段。
-        "has_elevator": has_elevator(total_floors, row.get("tihu")),  # 设置当前数据项或参数。
-        "listing_type": "二手房",  # 设置当前数据项或参数。
-        "lng": lng,  # 设置当前数据项或参数。
-        "lat": lat,  # 设置当前数据项或参数。
-        "source": SOURCE,  # 设置当前数据项或参数。
-        "source_url": clean_text(row.get("link"), limit=500),  # 赋值或更新当前变量/字段。
-    }  # 结束当前数据结构或调用块。
+    rooms, halls = parse_layout(row.get("huxing"))
+    floor, total_floors = parse_floor(row.get("louceng"))
+    return {
+        "city": city,
+        "district": district,
+        "title": make_title(row),
+        "total_price": round(unit_price * area / 10000, 2),
+        "unit_price": round(unit_price),
+        "area": round(area, 2),
+        "rooms": rooms,
+        "halls": halls,
+        "floor": floor,
+        "total_floors": total_floors,
+        "build_year": None,
+        "orientation": clean_text(row.get("chaoxiang"), limit=20),
+        "decoration": clean_text(row.get("zhuangxiu"), limit=20),
+        "has_elevator": has_elevator(total_floors, row.get("tihu")),
+        "listing_type": "二手房",
+        "lng": lng,
+        "lat": lat,
+        "source": SOURCE,
+        "source_url": clean_text(row.get("link"), limit=500),
+    }
 
 
-def load_rows(path):  # 声明函数或方法入口。
+def load_rows(path):
     """读取 TSV 文件并返回标准化房源、坐标统计和跳过数量。"""
-    rows = []  # 赋值或更新当前变量/字段。
-    city_points = defaultdict(list)  # 赋值或更新当前变量/字段。
-    district_points = defaultdict(list)  # 赋值或更新当前变量/字段。
-    skipped = 0  # 赋值或更新当前变量/字段。
-    with path.open("r", encoding="utf-8-sig", newline="") as fh:  # 进入上下文管理器并自动处理资源。
-        reader = csv.DictReader(fh, delimiter="\t")  # 赋值或更新当前变量/字段。
-        for raw in reader:  # 遍历集合中的每一项并执行处理。
-            item = normalized_row(raw)  # 赋值或更新当前变量/字段。
-            if item is None:  # 根据条件判断是否进入该分支。
-                skipped += 1  # 赋值或更新当前变量/字段。
-                continue  # 跳过本轮循环剩余逻辑。
-            rows.append(item)  # 执行本行代码逻辑。
-            if item["lng"] is not None and item["lat"] is not None:  # 根据条件判断是否进入该分支。
-                city_points[item["city"]].append((item["lng"], item["lat"]))  # 执行本行代码逻辑。
-                district_points[(item["city"], item["district"])].append(  # 执行本行代码逻辑。
-                    (item["lng"], item["lat"])  # 执行本行代码逻辑。
-                )  # 结束当前数据结构或调用块。
-    return rows, city_points, district_points, skipped  # 返回当前逻辑的处理结果。
+    rows = []
+    city_points = defaultdict(list)
+    district_points = defaultdict(list)
+    skipped = 0
+    # 读取时同步收集城市/区域坐标样本，后续用于给新建 City/District 计算中心点。
+    with path.open("r", encoding="utf-8-sig", newline="") as fh:
+        reader = csv.DictReader(fh, delimiter="\t")
+        for raw in reader:
+            item = normalized_row(raw)
+            if item is None:
+                skipped += 1
+                continue
+            rows.append(item)
+            if item["lng"] is not None and item["lat"] is not None:
+                city_points[item["city"]].append((item["lng"], item["lat"]))
+                district_points[(item["city"], item["district"])].append(
+                    (item["lng"], item["lat"])
+                )
+    return rows, city_points, district_points, skipped
 
 
-def average_point(points):  # 声明函数或方法入口。
+def average_point(points):
     """计算一组经纬度坐标的平均中心点。"""
-    if not points:  # 根据条件判断是否进入该分支。
-        return None, None  # 返回当前逻辑的处理结果。
-    return (  # 返回当前逻辑的处理结果。
-        round(sum(p[0] for p in points) / len(points), 6),  # 设置当前数据项或参数。
-        round(sum(p[1] for p in points) / len(points), 6),  # 设置当前数据项或参数。
-    )  # 结束当前数据结构或调用块。
+    if not points:
+        return None, None
+    return (
+        round(sum(p[0] for p in points) / len(points), 6),
+        round(sum(p[1] for p in points) / len(points), 6),
+    )
 
 
-def ensure_cities(rows, city_points):  # 声明函数或方法入口。
+def ensure_cities(rows, city_points):
     """确保导入数据涉及的城市存在，并补全城市坐标。"""
-    city_ids = {}  # 赋值或更新当前变量/字段。
-    city_names = sorted({row["city"] for row in rows})  # 赋值或更新当前变量/字段。
-    existing = {  # 赋值或更新当前变量/字段。
-        city.name: city  # 设置当前数据项或参数。
-        for city in City.query.filter(City.name.in_(city_names)).all()  # 遍历集合中的每一项并执行处理。
-    }  # 结束当前数据结构或调用块。
-    for name in city_names:  # 遍历集合中的每一项并执行处理。
-        lng, lat = average_point(city_points.get(name))  # 赋值或更新当前变量/字段。
-        city = existing.get(name)  # 赋值或更新当前变量/字段。
-        if city is None:  # 根据条件判断是否进入该分支。
-            city = City(name=name, province="山东", lng=lng, lat=lat)  # 赋值或更新当前变量/字段。
-            db.session.add(city)  # 把对象加入数据库会话等待提交。
-            db.session.flush()  # 执行本行代码逻辑。
-        else:  # 处理条件不满足时的兜底分支。
-            city.province = city.province or "山东"  # 赋值或更新当前变量/字段。
-            if lng is not None:  # 根据条件判断是否进入该分支。
-                city.lng = lng  # 赋值或更新当前变量/字段。
-            if lat is not None:  # 根据条件判断是否进入该分支。
-                city.lat = lat  # 赋值或更新当前变量/字段。
-        city_ids[name] = city.id  # 赋值或更新当前变量/字段。
-    db.session.commit()  # 提交当前数据库事务。
-    return city_ids  # 返回当前逻辑的处理结果。
+    city_ids = {}
+    city_names = sorted({row["city"] for row in rows})
+    existing = {
+        city.name: city
+        for city in City.query.filter(City.name.in_(city_names)).all()
+    }
+    # 城市按名称去重：已存在则补省份/坐标，新城市则创建并立即 flush 拿到 id。
+    for name in city_names:
+        lng, lat = average_point(city_points.get(name))
+        city = existing.get(name)
+        if city is None:
+            city = City(name=name, province="山东", lng=lng, lat=lat)
+            db.session.add(city)
+            db.session.flush()
+        else:
+            city.province = city.province or "山东"
+            if lng is not None:
+                city.lng = lng
+            if lat is not None:
+                city.lat = lat
+        city_ids[name] = city.id
+    db.session.commit()
+    return city_ids
 
 
-def ensure_districts(rows, city_ids, district_points):  # 声明函数或方法入口。
+def ensure_districts(rows, city_ids, district_points):
     """确保导入数据涉及的区域存在，并补全区域坐标和网格位置。"""
-    district_ids = {}  # 赋值或更新当前变量/字段。
-    names_by_city = defaultdict(set)  # 赋值或更新当前变量/字段。
-    for row in rows:  # 遍历集合中的每一项并执行处理。
-        names_by_city[city_ids[row["city"]]].add(row["district"])  # 执行本行代码逻辑。
+    district_ids = {}
+    names_by_city = defaultdict(set)
+    for row in rows:
+        names_by_city[city_ids[row["city"]]].add(row["district"])
 
-    for city_id, names in names_by_city.items():  # 遍历集合中的每一项并执行处理。
-        existing = {  # 赋值或更新当前变量/字段。
-            district.name: district  # 设置当前数据项或参数。
-            for district in District.query.filter(  # 遍历集合中的每一项并执行处理。
-                District.city_id == city_id,  # 设置当前数据项或参数。
-                District.name.in_(sorted(names)),  # 设置当前数据项或参数。
-            ).all()  # 执行本行代码逻辑。
-        }  # 结束当前数据结构或调用块。
-        city_name = next(k for k, v in city_ids.items() if v == city_id)  # 执行本行代码逻辑。
-        for index, name in enumerate(sorted(names)):  # 遍历集合中的每一项并执行处理。
-            lng, lat = average_point(district_points.get((city_name, name)))  # 赋值或更新当前变量/字段。
-            district = existing.get(name)  # 赋值或更新当前变量/字段。
-            if district is None:  # 根据条件判断是否进入该分支。
-                district = District(  # 赋值或更新当前变量/字段。
-                    city_id=city_id,  # 赋值或更新当前变量/字段。
-                    name=name,  # 赋值或更新当前变量/字段。
-                    lng=lng,  # 赋值或更新当前变量/字段。
-                    lat=lat,  # 赋值或更新当前变量/字段。
-                    grid_x=index % 12,  # 赋值或更新当前变量/字段。
-                    grid_y=index // 12,  # 赋值或更新当前变量/字段。
-                )  # 结束当前数据结构或调用块。
-                db.session.add(district)  # 把对象加入数据库会话等待提交。
-                db.session.flush()  # 执行本行代码逻辑。
-            else:  # 处理条件不满足时的兜底分支。
-                if lng is not None:  # 根据条件判断是否进入该分支。
-                    district.lng = lng  # 赋值或更新当前变量/字段。
-                if lat is not None:  # 根据条件判断是否进入该分支。
-                    district.lat = lat  # 赋值或更新当前变量/字段。
-                district.grid_x = district.grid_x or index % 12  # 赋值或更新当前变量/字段。
-                district.grid_y = district.grid_y or index // 12  # 赋值或更新当前变量/字段。
-            district_ids[(city_name, name)] = district.id  # 赋值或更新当前变量/字段。
-    db.session.commit()  # 提交当前数据库事务。
-    return district_ids  # 返回当前逻辑的处理结果。
+    # 区域以“城市 id + 区域名”为唯一业务键，网格坐标用于无真实边界时的 3D 排布。
+    for city_id, names in names_by_city.items():
+        existing = {
+            district.name: district
+            for district in District.query.filter(
+                District.city_id == city_id,
+                District.name.in_(sorted(names)),
+            ).all()
+        }
+        city_name = next(k for k, v in city_ids.items() if v == city_id)
+        for index, name in enumerate(sorted(names)):
+            lng, lat = average_point(district_points.get((city_name, name)))
+            district = existing.get(name)
+            if district is None:
+                district = District(
+                    city_id=city_id,
+                    name=name,
+                    lng=lng,
+                    lat=lat,
+                    grid_x=index % 12,
+                    grid_y=index // 12,
+                )
+                db.session.add(district)
+                db.session.flush()
+            else:
+                if lng is not None:
+                    district.lng = lng
+                if lat is not None:
+                    district.lat = lat
+                district.grid_x = district.grid_x or index % 12
+                district.grid_y = district.grid_y or index // 12
+            district_ids[(city_name, name)] = district.id
+    db.session.commit()
+    return district_ids
 
 
-def insert_properties(rows, district_ids):  # 声明函数或方法入口。
+def insert_properties(rows, district_ids):
     """批量插入去重后的山东房源记录。"""
-    source_urls = [row["source_url"] for row in rows if row["source_url"]]  # 赋值或更新当前变量/字段。
-    existing_urls = set()  # 赋值或更新当前变量/字段。
-    for start in range(0, len(source_urls), 10000):  # 遍历集合中的每一项并执行处理。
-        batch = source_urls[start : start + 10000]  # 赋值或更新当前变量/字段。
-        existing_urls.update(  # 执行本行代码逻辑。
-            url  # 执行本行代码逻辑。
-            for (url,) in db.session.query(Property.source_url)  # 遍历集合中的每一项并执行处理。
-            .filter(Property.source_url.in_(batch))  # 执行本行代码逻辑。
-            .all()  # 执行本行代码逻辑。
-        )  # 结束当前数据结构或调用块。
+    source_urls = [row["source_url"] for row in rows if row["source_url"]]
+    existing_urls = set()
+    # source_url 是采集房源的天然去重键，先分批查询已有链接，避免重复导入。
+    for start in range(0, len(source_urls), 10000):
+        batch = source_urls[start : start + 10000]
+        existing_urls.update(
+            url
+            for (url,) in db.session.query(Property.source_url)
+            .filter(Property.source_url.in_(batch))
+            .all()
+        )
 
-    inserted = skipped = 0  # 赋值或更新当前变量/字段。
-    buffer = []  # 赋值或更新当前变量/字段。
-    for row in rows:  # 遍历集合中的每一项并执行处理。
-        if row["source_url"] and row["source_url"] in existing_urls:  # 根据条件判断是否进入该分支。
-            skipped += 1  # 赋值或更新当前变量/字段。
-            continue  # 跳过本轮循环剩余逻辑。
-        data = dict(row)  # 赋值或更新当前变量/字段。
-        city = data.pop("city")  # 赋值或更新当前变量/字段。
-        district = data.pop("district")  # 赋值或更新当前变量/字段。
-        data["district_id"] = district_ids[(city, district)]  # 赋值或更新当前变量/字段。
-        buffer.append(Property(**data))  # 执行本行代码逻辑。
-        if len(buffer) >= BATCH_SIZE:  # 根据条件判断是否进入该分支。
-            db.session.bulk_save_objects(buffer)  # 执行本行代码逻辑。
-            db.session.commit()  # 提交当前数据库事务。
-            inserted += len(buffer)  # 赋值或更新当前变量/字段。
-            print(f"inserted {inserted} properties ...")  # 执行本行代码逻辑。
-            buffer.clear()  # 执行本行代码逻辑。
+    inserted = skipped = 0
+    buffer = []
+    # 插入阶段只保留区域能匹配且链接未出现过的房源，分批提交降低事务和内存压力。
+    for row in rows:
+        if row["source_url"] and row["source_url"] in existing_urls:
+            skipped += 1
+            continue
+        data = dict(row)
+        city = data.pop("city")
+        district = data.pop("district")
+        data["district_id"] = district_ids[(city, district)]
+        buffer.append(Property(**data))
+        if len(buffer) >= BATCH_SIZE:
+            db.session.bulk_save_objects(buffer)
+            db.session.commit()
+            inserted += len(buffer)
+            print(f"inserted {inserted} properties ...")
+            buffer.clear()
 
-    if buffer:  # 根据条件判断是否进入该分支。
-        db.session.bulk_save_objects(buffer)  # 执行本行代码逻辑。
-        db.session.commit()  # 提交当前数据库事务。
-        inserted += len(buffer)  # 赋值或更新当前变量/字段。
-    return inserted, skipped  # 返回当前逻辑的处理结果。
+    if buffer:
+        db.session.bulk_save_objects(buffer)
+        db.session.commit()
+        inserted += len(buffer)
+    return inserted, skipped
 
 
-def main():  # 声明函数或方法入口。
+def main():
     """作为脚本入口执行当前文件的主要导入、迁移或启动流程。"""
-    parser = argparse.ArgumentParser()  # 赋值或更新当前变量/字段。
-    parser.add_argument("--file", default=str(DEFAULT_TSV), help="house_info.tsv path")  # 赋值或更新当前变量/字段。
-    parser.add_argument(  # 执行本行代码逻辑。
-        "--replace",  # 设置当前数据项或参数。
-        action="store_true",  # 赋值或更新当前变量/字段。
-        help=f"delete existing properties with source={SOURCE!r} before import",  # 赋值或更新当前变量/字段。
-    )  # 结束当前数据结构或调用块。
-    args = parser.parse_args()  # 赋值或更新当前变量/字段。
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file", default=str(DEFAULT_TSV), help="house_info.tsv path")
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help=f"delete existing properties with source={SOURCE!r} before import",
+    )
+    args = parser.parse_args()
 
-    path = Path(args.file).expanduser().resolve()  # 赋值或更新当前变量/字段。
-    if not path.exists():  # 根据条件判断是否进入该分支。
-        raise SystemExit(f"TSV not found: {path}")  # 抛出异常并交由上层处理。
+    path = Path(args.file).expanduser().resolve()
+    if not path.exists():
+        raise SystemExit(f"TSV not found: {path}")
 
-    app = create_app()  # 赋值或更新当前变量/字段。
-    with app.app_context():  # 进入上下文管理器并自动处理资源。
-        db.create_all()  # 执行本行代码逻辑。
-        before = db.session.query(func.count(Property.id)).scalar()  # 赋值或更新当前变量/字段。
-        if args.replace:  # 根据条件判断是否进入该分支。
-            deleted = Property.query.filter_by(source=SOURCE).delete(  # 赋值或更新当前变量/字段。
-                synchronize_session=False  # 赋值或更新当前变量/字段。
-            )  # 结束当前数据结构或调用块。
-            db.session.commit()  # 提交当前数据库事务。
-            print(f"deleted existing {SOURCE} properties: {deleted}")  # 设置当前数据项或参数。
+    app = create_app()
+    with app.app_context():
+        db.create_all()
+        before = db.session.query(func.count(Property.id)).scalar()
+        if args.replace:
+            deleted = Property.query.filter_by(source=SOURCE).delete(
+                synchronize_session=False
+            )
+            db.session.commit()
+            print(f"deleted existing {SOURCE} properties: {deleted}")
 
-        rows, city_points, district_points, invalid = load_rows(path)  # 赋值或更新当前变量/字段。
-        print(f"loaded valid rows: {len(rows)}, skipped invalid rows: {invalid}")  # 设置当前数据项或参数。
-        city_ids = ensure_cities(rows, city_points)  # 赋值或更新当前变量/字段。
-        district_ids = ensure_districts(rows, city_ids, district_points)  # 赋值或更新当前变量/字段。
-        inserted, duplicate = insert_properties(rows, district_ids)  # 赋值或更新当前变量/字段。
-        after = db.session.query(func.count(Property.id)).scalar()  # 赋值或更新当前变量/字段。
+        rows, city_points, district_points, invalid = load_rows(path)
+        print(f"loaded valid rows: {len(rows)}, skipped invalid rows: {invalid}")
+        city_ids = ensure_cities(rows, city_points)
+        district_ids = ensure_districts(rows, city_ids, district_points)
+        inserted, duplicate = insert_properties(rows, district_ids)
+        after = db.session.query(func.count(Property.id)).scalar()
 
-    print(f"cities touched: {len(city_ids)}")  # 设置当前数据项或参数。
-    print(f"districts touched: {len(district_ids)}")  # 设置当前数据项或参数。
-    print(f"properties before: {before}")  # 设置当前数据项或参数。
-    print(f"properties inserted: {inserted}")  # 设置当前数据项或参数。
-    print(f"properties skipped duplicate: {duplicate}")  # 设置当前数据项或参数。
-    print(f"properties after: {after}")  # 设置当前数据项或参数。
+    print(f"cities touched: {len(city_ids)}")
+    print(f"districts touched: {len(district_ids)}")
+    print(f"properties before: {before}")
+    print(f"properties inserted: {inserted}")
+    print(f"properties skipped duplicate: {duplicate}")
+    print(f"properties after: {after}")
 
 
-if __name__ == "__main__":  # 根据条件判断是否进入该分支。
-    main()  # 执行本行代码逻辑。
+if __name__ == "__main__":
+    main()

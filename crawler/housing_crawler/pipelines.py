@@ -3,67 +3,69 @@
 2) DatabasePipeline —— 复用后端 Flask 应用与 SQLAlchemy 模型写入 Property 表，
    自动 get_or_create 城市/行政区，按 source_url 去重。
 """
-import os  # 导入本行所需的模块或对象。
-import sys  # 导入本行所需的模块或对象。
+import os
+import sys
 
-from itemadapter import ItemAdapter  # 导入本行所需的模块或对象。
-from scrapy.exceptions import DropItem  # 导入本行所需的模块或对象。
+from itemadapter import ItemAdapter
+from scrapy.exceptions import DropItem
 
 
-def _to_float(v):  # 声明函数或方法入口。
+def _to_float(v):
     """将输入值安全转换为浮点数。"""
-    try:  # 开始执行可能出现异常的逻辑。
-        return float(v) if v not in (None, "") else None  # 返回当前逻辑的处理结果。
-    except (ValueError, TypeError):  # 捕获异常并执行错误处理。
-        return None  # 返回当前逻辑的处理结果。
+    try:
+        return float(v) if v not in (None, "") else None
+    except (ValueError, TypeError):
+        return None
 
 
-def _to_int(v):  # 声明函数或方法入口。
+def _to_int(v):
     """将输入值安全转换为整数。"""
-    f = _to_float(v)  # 赋值或更新当前变量/字段。
-    return int(f) if f is not None else None  # 返回当前逻辑的处理结果。
+    f = _to_float(v)
+    return int(f) if f is not None else None
 
 
-def _truncate(s, n):  # 声明函数或方法入口。
+def _truncate(s, n):
     """按最大长度截断字符串并保留空值语义。"""
-    if s is None:  # 根据条件判断是否进入该分支。
-        return None  # 返回当前逻辑的处理结果。
-    s = str(s).strip()  # 赋值或更新当前变量/字段。
-    return s[:n] if s else None  # 返回当前逻辑的处理结果。
+    if s is None:
+        return None
+    s = str(s).strip()
+    return s[:n] if s else None
 
 
-class CleanValidatePipeline:  # 声明类并定义相关数据或行为。
+class CleanValidatePipeline:
     """类型转换 + 单价兜底 + 必要字段校验。"""
 
-    def process_item(self, item, spider):  # 声明函数或方法入口。
+    def process_item(self, item, spider):
         """清洗、校验或入库单条爬取房源数据。"""
-        a = ItemAdapter(item)  # 赋值或更新当前变量/字段。
+        a = ItemAdapter(item)
 
-        a["total_price"] = _to_float(a.get("total_price"))  # 赋值或更新当前变量/字段。
-        a["unit_price"] = _to_float(a.get("unit_price"))  # 赋值或更新当前变量/字段。
-        a["area"] = _to_float(a.get("area"))  # 赋值或更新当前变量/字段。
-        for f in ("rooms", "halls", "floor", "total_floors", "build_year"):  # 遍历集合中的每一项并执行处理。
-            a[f] = _to_int(a.get(f))  # 赋值或更新当前变量/字段。
+        # 页面解析出的 item 字段都是弱类型文本，入库前先统一转换成价格、面积、楼层等数值。
+        a["total_price"] = _to_float(a.get("total_price"))
+        a["unit_price"] = _to_float(a.get("unit_price"))
+        a["area"] = _to_float(a.get("area"))
+        for f in ("rooms", "halls", "floor", "total_floors", "build_year"):
+            a[f] = _to_int(a.get(f))
 
         # 单价缺失则用 总价(万元)/面积 反推为 元/㎡
-        if not a.get("unit_price") and a.get("total_price") and a.get("area"):  # 根据条件判断是否进入该分支。
-            a["unit_price"] = a["total_price"] * 10000 / a["area"]  # 赋值或更新当前变量/字段。
-        if a.get("unit_price"):  # 根据条件判断是否进入该分支。
-            a["unit_price"] = round(a["unit_price"])  # 赋值或更新当前变量/字段。
+        if not a.get("unit_price") and a.get("total_price") and a.get("area"):
+            a["unit_price"] = a["total_price"] * 10000 / a["area"]
+        if a.get("unit_price"):
+            a["unit_price"] = round(a["unit_price"])
 
         # 截断到数据库列长度，避免 MySQL 严格模式报错
-        a["title"] = _truncate(a.get("title"), 200)  # 赋值或更新当前变量/字段。
-        a["orientation"] = _truncate(a.get("orientation"), 20)  # 赋值或更新当前变量/字段。
-        a["decoration"] = _truncate(a.get("decoration"), 20)  # 赋值或更新当前变量/字段。
-        a["source"] = _truncate(a.get("source"), 50)  # 赋值或更新当前变量/字段。
-        a["source_url"] = _truncate(a.get("source_url"), 500)  # 赋值或更新当前变量/字段。
+        a["title"] = _truncate(a.get("title"), 200)
+        a["orientation"] = _truncate(a.get("orientation"), 20)
+        a["decoration"] = _truncate(a.get("decoration"), 20)
+        a["source"] = _truncate(a.get("source"), 50)
+        a["source_url"] = _truncate(a.get("source_url"), 500)
 
-        if not a.get("title") or not (a.get("unit_price") or a.get("total_price")):  # 根据条件判断是否进入该分支。
-            raise DropItem(f"缺少必要字段(标题/价格)：{a.get('source_url')}")  # 抛出异常并交由上层处理。
-        return item  # 返回当前逻辑的处理结果。
+        # 标题和价格是房源展示、去重排查和后续统计的底线，缺失则直接丢弃。
+        if not a.get("title") or not (a.get("unit_price") or a.get("total_price")):
+            raise DropItem(f"缺少必要字段(标题/价格)：{a.get('source_url')}")
+        return item
 
 
-class DatabasePipeline:  # 声明类并定义相关数据或行为。
+class DatabasePipeline:
     """写入后端 Property 表；复用 backend 的应用工厂、配置与模型。
 
     每条 item 在独立的 ``with app.app_context()`` 内完成查询/写入，避免 Flask
@@ -71,150 +73,152 @@ class DatabasePipeline:  # 声明类并定义相关数据或行为。
     按名称缓存其 **id**（而非 ORM 对象），跨上下文安全。
     """
 
-    def open_spider(self, spider):  # 声明函数或方法入口。
+    def open_spider(self, spider):
         """爬虫启动时初始化数据库连接、建表和缓存。"""
         # 把 backend/ 加入 import 路径，复用其 Flask app / DB 配置 / 模型
-        backend = os.path.abspath(  # 赋值或更新当前变量/字段。
-            os.path.join(os.path.dirname(__file__), "..", "..", "backend")  # 执行本行代码逻辑。
-        )  # 结束当前数据结构或调用块。
-        if backend not in sys.path:  # 根据条件判断是否进入该分支。
-            sys.path.insert(0, backend)  # 执行本行代码逻辑。
+        backend = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "backend")
+        )
+        if backend not in sys.path:
+            sys.path.insert(0, backend)
 
         from app import app  # 应用工厂在导入时已 create_app()（含 DB 配置与建表）
-        from extensions import db  # 导入本行所需的模块或对象。
-        from models import City, District, Property  # 导入本行所需的模块或对象。
+        from extensions import db
+        from models import City, District, Property
 
-        self.app = app  # 赋值或更新当前变量/字段。
-        self.db = db  # 赋值或更新当前变量/字段。
-        self.City, self.District, self.Property = City, District, Property  # 赋值或更新当前变量/字段。
+        self.app = app
+        self.db = db
+        self.City, self.District, self.Property = City, District, Property
 
-        self._province_of = self._load_province_map(backend)  # 赋值或更新当前变量/字段。
-        self._city_ids = {}  # 赋值或更新当前变量/字段。
-        self._district_ids = {}  # 赋值或更新当前变量/字段。
-        self._seen = set()  # 赋值或更新当前变量/字段。
-        self.added = 0  # 赋值或更新当前变量/字段。
-        self.skipped = 0  # 赋值或更新当前变量/字段。
-        spider.logger.info(  # 执行本行代码逻辑。
-            "DatabasePipeline 就绪，写入：%s", app.config["SQLALCHEMY_DATABASE_URI"]  # 执行本行代码逻辑。
-        )  # 结束当前数据结构或调用块。
+        self._province_of = self._load_province_map(backend)
+        self._city_ids = {}
+        self._district_ids = {}
+        self._seen = set()
+        self.added = 0
+        self.skipped = 0
+        spider.logger.info(
+            "DatabasePipeline 就绪，写入：%s", app.config["SQLALCHEMY_DATABASE_URI"]
+        )
 
     # _city_id / _district_id 必须在 app 上下文内调用
-    def _load_province_map(self, backend):  # 声明函数或方法入口。
+    def _load_province_map(self, backend):
         """从 backend/data/province_data.csv 建「城市名 -> 省份」映射，
         给新建城市补 province；并补充链家有站但不在 CSV 的县级市/特殊地区。"""
-        import csv  # 导入本行所需的模块或对象。
+        import csv
 
-        mapping = {}  # 赋值或更新当前变量/字段。
-        path = os.path.join(backend, "data", "province_data.csv")  # 赋值或更新当前变量/字段。
-        try:  # 开始执行可能出现异常的逻辑。
-            with open(path, encoding="utf-8-sig") as fh:  # 进入上下文管理器并自动处理资源。
-                for row in csv.DictReader(fh):  # 遍历集合中的每一项并执行处理。
-                    prov = (row.get("省份") or "").strip()  # 赋值或更新当前变量/字段。
-                    city = (row.get("城市") or "").strip()  # 赋值或更新当前变量/字段。
-                    if prov and city:  # 根据条件判断是否进入该分支。
-                        mapping[city] = prov  # 赋值或更新当前变量/字段。
-        except OSError:  # 捕获异常并执行错误处理。
-            pass  # 保留语法占位以便后续扩展。
-        mapping.update({  # 执行本行代码逻辑。
-            "江阴": "江苏", "宜兴": "江苏", "昆山": "江苏", "常熟": "江苏", "太仓": "江苏",  # 设置当前数据项或参数。
-            "句容": "江苏", "丹阳": "江苏", "海门": "江苏",  # 设置当前数据项或参数。
-            "义乌": "浙江",  # 设置当前数据项或参数。
-            "涿州": "河北",  # 设置当前数据项或参数。
-            "澄迈": "海南", "陵水": "海南", "万宁": "海南",  # 设置当前数据项或参数。
-            "西双版纳": "云南", "大理": "云南",  # 设置当前数据项或参数。
-            "凉山": "四川", "湘西": "湖南",  # 设置当前数据项或参数。
-        })  # 执行本行代码逻辑。
-        return mapping  # 返回当前逻辑的处理结果。
+        mapping = {}
+        path = os.path.join(backend, "data", "province_data.csv")
+        try:
+            with open(path, encoding="utf-8-sig") as fh:
+                for row in csv.DictReader(fh):
+                    prov = (row.get("省份") or "").strip()
+                    city = (row.get("城市") or "").strip()
+                    if prov and city:
+                        mapping[city] = prov
+        except OSError:
+            pass
+        mapping.update({
+            "江阴": "江苏", "宜兴": "江苏", "昆山": "江苏", "常熟": "江苏", "太仓": "江苏",
+            "句容": "江苏", "丹阳": "江苏", "海门": "江苏",
+            "义乌": "浙江",
+            "涿州": "河北",
+            "澄迈": "海南", "陵水": "海南", "万宁": "海南",
+            "西双版纳": "云南", "大理": "云南",
+            "凉山": "四川", "湘西": "湖南",
+        })
+        return mapping
 
-    def _city_id(self, name):  # 声明函数或方法入口。
+    def _city_id(self, name):
         """获取或创建城市记录并返回城市编号。"""
-        name = (name or "未知城市").strip()  # 赋值或更新当前变量/字段。
-        if name in self._city_ids:  # 根据条件判断是否进入该分支。
-            return self._city_ids[name]  # 返回当前逻辑的处理结果。
-        city = self.City.query.filter_by(name=name).first()  # 赋值或更新当前变量/字段。
-        if city is None:  # 根据条件判断是否进入该分支。
-            prov = self._province_of.get(name)  # 赋值或更新当前变量/字段。
+        name = (name or "未知城市").strip()
+        if name in self._city_ids:
+            return self._city_ids[name]
+        city = self.City.query.filter_by(name=name).first()
+        if city is None:
+            prov = self._province_of.get(name)
             city = self.City(name=name, province=prov)  # 经纬度留空，可后续补全
-            self.db.session.add(city)  # 把对象加入数据库会话等待提交。
-            self.db.session.flush()  # 执行本行代码逻辑。
-        elif getattr(city, "province", None) in (None, "") and self._province_of.get(name):  # 根据条件判断是否进入该分支。
+            self.db.session.add(city)
+            self.db.session.flush()
+        elif getattr(city, "province", None) in (None, "") and self._province_of.get(name):
             city.province = self._province_of[name]  # 回填已存在城市缺失的省份
-        self._city_ids[name] = city.id  # 赋值或更新当前变量/字段。
-        return city.id  # 返回当前逻辑的处理结果。
+        self._city_ids[name] = city.id
+        return city.id
 
-    def _district_id(self, city_id, name, lng=None, lat=None):  # 声明函数或方法入口。
+    def _district_id(self, city_id, name, lng=None, lat=None):
         """获取或创建区域记录并返回区域编号。"""
-        name = (name or "未知区域").strip()  # 赋值或更新当前变量/字段。
-        key = (city_id, name)  # 赋值或更新当前变量/字段。
-        if key in self._district_ids:  # 根据条件判断是否进入该分支。
-            return self._district_ids[key]  # 返回当前逻辑的处理结果。
-        d = self.District.query.filter_by(city_id=city_id, name=name).first()  # 赋值或更新当前变量/字段。
-        if d is None:  # 根据条件判断是否进入该分支。
-            d = self.District(city_id=city_id, name=name, lng=lng, lat=lat)  # 赋值或更新当前变量/字段。
-            self.db.session.add(d)  # 把对象加入数据库会话等待提交。
-            self.db.session.flush()  # 执行本行代码逻辑。
-        self._district_ids[key] = d.id  # 赋值或更新当前变量/字段。
-        return d.id  # 返回当前逻辑的处理结果。
+        name = (name or "未知区域").strip()
+        key = (city_id, name)
+        if key in self._district_ids:
+            return self._district_ids[key]
+        d = self.District.query.filter_by(city_id=city_id, name=name).first()
+        if d is None:
+            d = self.District(city_id=city_id, name=name, lng=lng, lat=lat)
+            self.db.session.add(d)
+            self.db.session.flush()
+        self._district_ids[key] = d.id
+        return d.id
 
-    def process_item(self, item, spider):  # 声明函数或方法入口。
+    def process_item(self, item, spider):
         """清洗、校验或入库单条爬取房源数据。"""
-        a = ItemAdapter(item)  # 赋值或更新当前变量/字段。
-        url = a.get("source_url")  # 赋值或更新当前变量/字段。
-        if url and url in self._seen:  # 根据条件判断是否进入该分支。
-            self.skipped += 1  # 赋值或更新当前变量/字段。
-            return item  # 返回当前逻辑的处理结果。
+        a = ItemAdapter(item)
+        url = a.get("source_url")
+        # _seen 负责本轮爬取内去重，数据库查询负责历史数据去重。
+        if url and url in self._seen:
+            self.skipped += 1
+            return item
 
-        with self.app.app_context():  # 进入上下文管理器并自动处理资源。
-            try:  # 开始执行可能出现异常的逻辑。
-                if url and self.Property.query.filter_by(source_url=url).first() is not None:  # 根据条件判断是否进入该分支。
-                    self._seen.add(url)  # 执行本行代码逻辑。
-                    self.skipped += 1  # 赋值或更新当前变量/字段。
-                    return item  # 返回当前逻辑的处理结果。
+        with self.app.app_context():
+            try:
+                if url and self.Property.query.filter_by(source_url=url).first() is not None:
+                    self._seen.add(url)
+                    self.skipped += 1
+                    return item
 
-                city_id = self._city_id(a.get("city"))  # 赋值或更新当前变量/字段。
-                district_id = self._district_id(  # 赋值或更新当前变量/字段。
-                    city_id, a.get("district"), a.get("lng"), a.get("lat")  # 执行本行代码逻辑。
-                )  # 结束当前数据结构或调用块。
-                elev = a.get("has_elevator")  # 赋值或更新当前变量/字段。
-                self.db.session.add(  # 把对象加入数据库会话等待提交。
-                    self.Property(  # 执行本行代码逻辑。
-                        district_id=district_id,  # 赋值或更新当前变量/字段。
-                        title=a.get("title"),  # 赋值或更新当前变量/字段。
-                        total_price=a.get("total_price"),  # 赋值或更新当前变量/字段。
-                        unit_price=a.get("unit_price"),  # 赋值或更新当前变量/字段。
-                        area=a.get("area"),  # 赋值或更新当前变量/字段。
-                        rooms=a.get("rooms") or 0,  # 赋值或更新当前变量/字段。
-                        halls=a.get("halls") or 0,  # 赋值或更新当前变量/字段。
-                        floor=a.get("floor"),  # 赋值或更新当前变量/字段。
-                        total_floors=a.get("total_floors"),  # 赋值或更新当前变量/字段。
-                        build_year=a.get("build_year"),  # 赋值或更新当前变量/字段。
-                        orientation=a.get("orientation"),  # 赋值或更新当前变量/字段。
-                        decoration=a.get("decoration"),  # 赋值或更新当前变量/字段。
-                        has_elevator=bool(elev) if elev is not None else False,  # 赋值或更新当前变量/字段。
-                        listing_type=a.get("listing_type") or "二手房",  # 赋值或更新当前变量/字段。
-                        lng=a.get("lng"),  # 赋值或更新当前变量/字段。
-                        lat=a.get("lat"),  # 赋值或更新当前变量/字段。
-                        source=a.get("source") or "lianjia",  # 赋值或更新当前变量/字段。
-                        source_url=url,  # 赋值或更新当前变量/字段。
-                    )  # 结束当前数据结构或调用块。
-                )  # 结束当前数据结构或调用块。
-                self.db.session.commit()  # 提交当前数据库事务。
-            except Exception:  # 捕获异常并执行错误处理。
-                self.db.session.rollback()  # 执行本行代码逻辑。
+                # 先解析外键归属，再把已清洗 item 映射到后端 Property 模型。
+                city_id = self._city_id(a.get("city"))
+                district_id = self._district_id(
+                    city_id, a.get("district"), a.get("lng"), a.get("lat")
+                )
+                elev = a.get("has_elevator")
+                self.db.session.add(
+                    self.Property(
+                        district_id=district_id,
+                        title=a.get("title"),
+                        total_price=a.get("total_price"),
+                        unit_price=a.get("unit_price"),
+                        area=a.get("area"),
+                        rooms=a.get("rooms") or 0,
+                        halls=a.get("halls") or 0,
+                        floor=a.get("floor"),
+                        total_floors=a.get("total_floors"),
+                        build_year=a.get("build_year"),
+                        orientation=a.get("orientation"),
+                        decoration=a.get("decoration"),
+                        has_elevator=bool(elev) if elev is not None else False,
+                        listing_type=a.get("listing_type") or "二手房",
+                        lng=a.get("lng"),
+                        lat=a.get("lat"),
+                        source=a.get("source") or "lianjia",
+                        source_url=url,
+                    )
+                )
+                self.db.session.commit()
+            except Exception:
+                self.db.session.rollback()
                 # 回滚后清空 id 缓存，避免引用未提交的城市/区
-                self._city_ids.clear()  # 执行本行代码逻辑。
-                self._district_ids.clear()  # 执行本行代码逻辑。
-                spider.logger.exception("写入失败，已跳过：%s", url)  # 执行本行代码逻辑。
-                return item  # 返回当前逻辑的处理结果。
+                self._city_ids.clear()
+                self._district_ids.clear()
+                spider.logger.exception("写入失败，已跳过：%s", url)
+                return item
 
-        self._seen.add(url)  # 执行本行代码逻辑。
-        self.added += 1  # 赋值或更新当前变量/字段。
-        if self.added % 20 == 0:  # 根据条件判断是否进入该分支。
-            spider.logger.info("已写入 %d 条 ...", self.added)  # 执行本行代码逻辑。
-        return item  # 返回当前逻辑的处理结果。
+        self._seen.add(url)
+        self.added += 1
+        if self.added % 20 == 0:
+            spider.logger.info("已写入 %d 条 ...", self.added)
+        return item
 
-    def close_spider(self, spider):  # 声明函数或方法入口。
+    def close_spider(self, spider):
         """爬虫关闭时提交剩余事务并释放数据库连接。"""
-        spider.logger.info(  # 执行本行代码逻辑。
-            "入库完成：新增 %d 条，跳过(重复) %d 条。", self.added, self.skipped  # 执行本行代码逻辑。
-        )  # 结束当前数据结构或调用块。
+        spider.logger.info(
+            "入库完成：新增 %d 条，跳过(重复) %d 条。", self.added, self.skipped
+        )
