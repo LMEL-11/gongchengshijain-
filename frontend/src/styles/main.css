@@ -1,71 +1,71 @@
 /* 文件功能：定义全局样式、基础布局、通用过渡和 Element Plus 样式微调。 */
-:root {
-  --brand: #2563eb;
-  --brand-dark: #1d4ed8;
-  --bg: #f5f7fa;
-  --card-radius: 12px;
-  --shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
-}
+:root { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  --brand: #2563eb; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  --brand-dark: #1d4ed8; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  --bg: #f5f7fa; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  --card-radius: 12px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  --shadow: 0 6px 24px rgba(15, 23, 42, 0.06); /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-* {
-  box-sizing: border-box;
-}
+* { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  box-sizing: border-box; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-html,
-body,
-#app {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
+html, /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+body, /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+#app { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  margin: 0; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  padding: 0; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  height: 100%; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-body {
-  font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg);
-  color: #1f2937;
-}
+body { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+    Roboto, Helvetica, Arial, sans-serif; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  background: var(--bg); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  color: #1f2937; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+a { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  color: inherit; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  text-decoration: none; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.page {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 20px 48px;
-}
+.page { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  max-width: 1280px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  margin: 0 auto; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  padding: 24px 20px 48px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.section-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.section-title { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  font-size: 18px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  font-weight: 700; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  margin: 0 0 16px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  display: flex; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  align-items: center; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  gap: 8px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.section-title::before {
-  content: '';
-  width: 4px;
-  height: 18px;
-  border-radius: 2px;
-  background: var(--brand);
-}
+.section-title::before { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  content: ''; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  width: 4px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  height: 18px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  border-radius: 2px; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  background: var(--brand); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.card {
-  background: #fff;
-  border-radius: var(--card-radius);
-  box-shadow: var(--shadow);
-  padding: 20px;
-}
+.card { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  background: #fff; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  border-radius: var(--card-radius); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  box-shadow: var(--shadow); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  padding: 20px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.muted {
-  color: #94a3b8;
-}
+.muted { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  color: #94a3b8; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.price-text {
-  color: #f5222d;
-  font-weight: 700;
-}
+.price-text { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  color: #f5222d; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  font-weight: 700; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */

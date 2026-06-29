@@ -1,385 +1,385 @@
 <!-- 文件功能：实现管理员房源管理页面，支持筛选、分页、新增、编辑、详情和删除。 -->
 <script setup>
-import { reactive, ref, onMounted, computed, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  adminGetProperties,
-  adminCreateProperty,
-  adminUpdateProperty,
-  adminDeleteProperty,
-  getCities,
-  getCityDistricts,
-} from '@/api'
+import { reactive, ref, onMounted, computed, watch, nextTick } from 'vue' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import { useRouter } from 'vue-router' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import { ElMessage, ElMessageBox } from 'element-plus' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import { // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+  adminGetProperties, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  adminCreateProperty, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  adminUpdateProperty, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  adminDeleteProperty, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  getCities, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  getCityDistricts, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+} from '@/api' // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
 
-const router = useRouter()
+const router = useRouter() // 保存router相关业务数据，作为后续计算、渲染或请求的输入。
 
 // ---------- 列表 ----------
-const list = ref([])
-const total = ref(0)
-const page = ref(1)
-const pageSize = ref(20)
-const keyword = ref('')
-const loading = ref(false)
+const list = ref([]) // 创建list响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const total = ref(0) // 创建总数统计，用于驱动页面渲染、表单输入或接口参数。
+const page = ref(1) // 创建当前页码，用于驱动页面渲染、表单输入或接口参数。
+const pageSize = ref(20) // 创建pageSize响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const keyword = ref('') // 创建搜索关键词，用于驱动页面渲染、表单输入或接口参数。
+const loading = ref(false) // 创建加载状态，用于驱动页面渲染、表单输入或接口参数。
 
 // 函数功能：按当前筛选和分页条件加载房源列表。
-async function fetchList() {
-  loading.value = true
-  try {
+async function fetchList() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  loading.value = true // 更新loading.value对应的页面状态，使界面展示与最新业务数据一致。
+  try { // 开始执行可能失败的接口请求或异步页面更新。
     // 后台列表筛选参数和分页参数全部交给后端处理，前端只维护当前查询状态。
-    const res = await adminGetProperties({
-      page: page.value,
-      page_size: pageSize.value,
-      keyword: keyword.value || undefined,
-      district_id: filterDistrictId.value || undefined,
-    })
-    list.value = res.items
-    total.value = res.total
-  } catch {
+    const res = await adminGetProperties({ // 保存res相关业务数据，作为后续计算、渲染或请求的输入。
+      page: page.value, // 声明page字段，作为组件配置、请求参数或图表数据的一部分。
+      page_size: pageSize.value, // 声明page_size字段，作为组件配置、请求参数或图表数据的一部分。
+      keyword: keyword.value || undefined, // 声明keyword字段，作为组件配置、请求参数或图表数据的一部分。
+      district_id: filterDistrictId.value || undefined, // 声明district_id字段，作为组件配置、请求参数或图表数据的一部分。
+    }) // 完成当前参数、配置或响应式数据结构的组装。
+    list.value = res.items // 更新list.value对应的页面状态，使界面展示与最新业务数据一致。
+    total.value = res.total // 更新total.value对应的页面状态，使界面展示与最新业务数据一致。
+  } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
     // handled by interceptor
-  } finally {
-    loading.value = false
-  }
-}
+  } finally { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    loading.value = false // 更新loading.value对应的页面状态，使界面展示与最新业务数据一致。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：重置到第一页并执行关键词搜索。
-function handleSearch() {
-  page.value = 1
-  fetchList()
-}
+function handleSearch() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  page.value = 1 // 更新page.value对应的页面状态，使界面展示与最新业务数据一致。
+  fetchList() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：处理分页大小变化并重新加载列表。
-function handleSizeChange(size) {
-  pageSize.value = size
-  page.value = 1
-  fetchList()
-}
+function handleSizeChange(size) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  pageSize.value = size // 更新pageSize.value对应的页面状态，使界面展示与最新业务数据一致。
+  page.value = 1 // 更新page.value对应的页面状态，使界面展示与最新业务数据一致。
+  fetchList() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
-onMounted(() => {
-  fetchList()
+onMounted(() => { // 注册组件生命周期逻辑，负责初始化数据或释放页面资源。
+  fetchList() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
   loadAllCities() // 预加载城市数据，让省市区选择器立即可用
-})
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // ---------- 省市区级联数据 ----------
 const allCities = ref([])      // 所有城市（含 province 字段）
-const selectedProvince = ref('')
-const selectedCityId = ref(null)
+const selectedProvince = ref('') // 创建selectedProvince响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const selectedCityId = ref(null) // 创建selectedCityId响应式状态，用于驱动页面渲染、表单输入或接口参数。
 const districts = ref([])      // 当前城市下的区
 
 // 省份列表从城市数据中计算
 // 函数功能：从城市列表中计算可选省份列表。
-const provinces = computed(() => {
-  const seen = new Set()
-  const result = []
-  for (const c of allCities.value) {
-    const p = c.province || '其他'
-    if (!seen.has(p)) {
-      seen.add(p)
-      result.push(p)
-    }
-  }
-  return result.sort()
-})
+const provinces = computed(() => { // 基于响应式数据派生provinces，用于保持界面展示与数据状态同步。
+  const seen = new Set() // 保存seen相关业务数据，作为后续计算、渲染或请求的输入。
+  const result = [] // 保存result相关业务数据，作为后续计算、渲染或请求的输入。
+  for (const c of allCities.value) { // 遍历当前数据集合，逐项转换为图表、地图或表单需要的结构。
+    const p = c.province || '其他' // 保存p相关业务数据，作为后续计算、渲染或请求的输入。
+    if (!seen.has(p)) { // 根据当前状态、接口结果或用户输入选择对应交互路径。
+      seen.add(p) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+      result.push(p) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    } // 完成当前参数、配置或响应式数据结构的组装。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+  return result.sort() // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // 当前省份下的城市列表
 // 函数功能：根据当前省份筛选可选城市。
-const filteredCities = computed(() => {
-  if (!selectedProvince.value) return []
-  return allCities.value.filter((c) => (c.province || '其他') === selectedProvince.value)
-})
+const filteredCities = computed(() => { // 基于响应式数据派生filteredCities，用于保持界面展示与数据状态同步。
+  if (!selectedProvince.value) return [] // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  return allCities.value.filter((c) => (c.province || '其他') === selectedProvince.value) // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：加载全部城市数据，供省市区选择器使用。
-async function loadAllCities() {
-  if (allCities.value.length) return
-  try {
-    const data = await getCities()
-    allCities.value = Array.isArray(data) ? data : []
-  } catch {
-    allCities.value = []
-  }
-}
+async function loadAllCities() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (allCities.value.length) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  try { // 开始执行可能失败的接口请求或异步页面更新。
+    const data = await getCities() // 保存data相关业务数据，作为后续计算、渲染或请求的输入。
+    allCities.value = Array.isArray(data) ? data : [] // 更新allCities.value对应的页面状态，使界面展示与最新业务数据一致。
+  } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    allCities.value = [] // 更新allCities.value对应的页面状态，使界面展示与最新业务数据一致。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 选中省份 → 重置城市和区
-watch(selectedProvince, () => {
-  selectedCityId.value = null
-  form.district_id = null
-  districts.value = []
-})
+watch(selectedProvince, () => { // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
+  selectedCityId.value = null // 更新selectedCityId.value对应的页面状态，使界面展示与最新业务数据一致。
+  form.district_id = null // 更新form.district_id对应的页面状态，使界面展示与最新业务数据一致。
+  districts.value = [] // 更新districts.value对应的页面状态，使界面展示与最新业务数据一致。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // 选中城市 → 加载该城市下的区
-watch(selectedCityId, async (cityId) => {
-  form.district_id = null
-  districts.value = []
-  if (!cityId) return
-  try {
-    districts.value = await getCityDistricts(cityId)
-  } catch {
-    districts.value = []
-  }
-})
+watch(selectedCityId, async (cityId) => { // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
+  form.district_id = null // 更新form.district_id对应的页面状态，使界面展示与最新业务数据一致。
+  districts.value = [] // 更新districts.value对应的页面状态，使界面展示与最新业务数据一致。
+  if (!cityId) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  try { // 开始执行可能失败的接口请求或异步页面更新。
+    districts.value = await getCityDistricts(cityId) // 等待异步接口或资源加载完成，再继续更新页面状态。
+  } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    districts.value = [] // 更新districts.value对应的页面状态，使界面展示与最新业务数据一致。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // ---------- 顶部工具栏省市区筛选（独立于对话框） ----------
-const filterProvince = ref('')
-const filterCityId = ref(null)
-const filterDistrictId = ref(null)
-const filterDistricts = ref([])
+const filterProvince = ref('') // 创建filterProvince响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const filterCityId = ref(null) // 创建filterCityId响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const filterDistrictId = ref(null) // 创建filterDistrictId响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const filterDistricts = ref([]) // 创建filterDistricts响应式状态，用于驱动页面渲染、表单输入或接口参数。
 
 // 函数功能：根据筛选省份计算筛选城市列表。
-const filterCities = computed(() => {
-  if (!filterProvince.value) return []
-  return allCities.value.filter((c) => (c.province || '其他') === filterProvince.value)
-})
+const filterCities = computed(() => { // 基于响应式数据派生filterCities，用于保持界面展示与数据状态同步。
+  if (!filterProvince.value) return [] // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  return allCities.value.filter((c) => (c.province || '其他') === filterProvince.value) // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
-watch(filterProvince, () => {
-  filterCityId.value = null
-  filterDistrictId.value = null
-  filterDistricts.value = []
-})
+watch(filterProvince, () => { // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
+  filterCityId.value = null // 更新filterCityId.value对应的页面状态，使界面展示与最新业务数据一致。
+  filterDistrictId.value = null // 更新filterDistrictId.value对应的页面状态，使界面展示与最新业务数据一致。
+  filterDistricts.value = [] // 更新filterDistricts.value对应的页面状态，使界面展示与最新业务数据一致。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
-watch(filterCityId, async (cityId) => {
-  filterDistrictId.value = null
-  filterDistricts.value = []
-  if (!cityId) return
-  try {
-    filterDistricts.value = await getCityDistricts(cityId)
-  } catch {
-    filterDistricts.value = []
-  }
-})
+watch(filterCityId, async (cityId) => { // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
+  filterDistrictId.value = null // 更新filterDistrictId.value对应的页面状态，使界面展示与最新业务数据一致。
+  filterDistricts.value = [] // 更新filterDistricts.value对应的页面状态，使界面展示与最新业务数据一致。
+  if (!cityId) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  try { // 开始执行可能失败的接口请求或异步页面更新。
+    filterDistricts.value = await getCityDistricts(cityId) // 等待异步接口或资源加载完成，再继续更新页面状态。
+  } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    filterDistricts.value = [] // 更新filterDistricts.value对应的页面状态，使界面展示与最新业务数据一致。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
-watch(filterDistrictId, () => {
-  page.value = 1
-  fetchList()
-})
+watch(filterDistrictId, () => { // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
+  page.value = 1 // 更新page.value对应的页面状态，使界面展示与最新业务数据一致。
+  fetchList() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // ---------- 新增 / 编辑 ----------
-const dialogVisible = ref(false)
-const dialogTitle = ref('新增房源')
-const isEdit = ref(false)
-const editId = ref(null)
-const formRef = ref(null)
-const submitting = ref(false)
+const dialogVisible = ref(false) // 创建dialogVisible响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const dialogTitle = ref('新增房源') // 创建dialogTitle响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const isEdit = ref(false) // 创建isEdit响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const editId = ref(null) // 创建editId响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const formRef = ref(null) // 创建formRef响应式状态，用于驱动页面渲染、表单输入或接口参数。
+const submitting = ref(false) // 创建submitting响应式状态，用于驱动页面渲染、表单输入或接口参数。
 
 // 函数功能：返回新增或编辑房源表单的默认数据结构。
-function defaultForm() {
-  return {
-    district_id: null,
-    title: '',
-    total_price: undefined,
-    unit_price: undefined,
-    area: undefined,
-    rooms: 0,
-    halls: 0,
-    floor: undefined,
-    total_floors: undefined,
-    build_year: undefined,
-    orientation: '',
-    decoration: '',
-    has_elevator: false,
-    listing_type: '二手房',
-    lng: undefined,
-    lat: undefined,
-    source: 'manual',
-    source_url: '',
-    listing_date: '',
-    ownership_type: '',
-    property_right: '',
-    mortgage: '',
-    selling_point: '',
-    community_intro: '',
-    layout_intro: '',
-    transport_intro: '',
-  }
-}
+function defaultForm() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  return { // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+    district_id: null, // 声明district_id字段，作为组件配置、请求参数或图表数据的一部分。
+    title: '', // 声明title字段，作为组件配置、请求参数或图表数据的一部分。
+    total_price: undefined, // 声明total_price字段，作为组件配置、请求参数或图表数据的一部分。
+    unit_price: undefined, // 声明unit_price字段，作为组件配置、请求参数或图表数据的一部分。
+    area: undefined, // 声明area字段，作为组件配置、请求参数或图表数据的一部分。
+    rooms: 0, // 声明rooms字段，作为组件配置、请求参数或图表数据的一部分。
+    halls: 0, // 声明halls字段，作为组件配置、请求参数或图表数据的一部分。
+    floor: undefined, // 声明floor字段，作为组件配置、请求参数或图表数据的一部分。
+    total_floors: undefined, // 声明total_floors字段，作为组件配置、请求参数或图表数据的一部分。
+    build_year: undefined, // 声明build_year字段，作为组件配置、请求参数或图表数据的一部分。
+    orientation: '', // 声明orientation字段，作为组件配置、请求参数或图表数据的一部分。
+    decoration: '', // 声明decoration字段，作为组件配置、请求参数或图表数据的一部分。
+    has_elevator: false, // 声明has_elevator字段，作为组件配置、请求参数或图表数据的一部分。
+    listing_type: '二手房', // 声明listing_type字段，作为组件配置、请求参数或图表数据的一部分。
+    lng: undefined, // 声明lng字段，作为组件配置、请求参数或图表数据的一部分。
+    lat: undefined, // 声明lat字段，作为组件配置、请求参数或图表数据的一部分。
+    source: 'manual', // 声明source字段，作为组件配置、请求参数或图表数据的一部分。
+    source_url: '', // 声明source_url字段，作为组件配置、请求参数或图表数据的一部分。
+    listing_date: '', // 声明listing_date字段，作为组件配置、请求参数或图表数据的一部分。
+    ownership_type: '', // 声明ownership_type字段，作为组件配置、请求参数或图表数据的一部分。
+    property_right: '', // 声明property_right字段，作为组件配置、请求参数或图表数据的一部分。
+    mortgage: '', // 声明mortgage字段，作为组件配置、请求参数或图表数据的一部分。
+    selling_point: '', // 声明selling_point字段，作为组件配置、请求参数或图表数据的一部分。
+    community_intro: '', // 声明community_intro字段，作为组件配置、请求参数或图表数据的一部分。
+    layout_intro: '', // 声明layout_intro字段，作为组件配置、请求参数或图表数据的一部分。
+    transport_intro: '', // 声明transport_intro字段，作为组件配置、请求参数或图表数据的一部分。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
-const form = reactive(defaultForm())
+const form = reactive(defaultForm()) // 创建表单数据模型，用于驱动页面渲染、表单输入或接口参数。
 
-const decorationOptions = ['毛坯', '简装', '精装', '豪装', '其他']
-const orientationOptions = [
-  '南北', '南', '北', '东西', '东', '西', '东南', '西南', '东北', '西北',
-]
-const listingTypeOptions = ['二手房', '新房', '出租']
-const ownershipTypeOptions = ['商品房', '已购公房', '经济适用房', '央产房', '私产', '其他']
-const propertyRightOptions = ['非共有', '共有']
-const mortgageOptions = ['无抵押', '有抵押', '有抵押业主自还', '有抵押客户偿还', '其他']
+const decorationOptions = ['毛坯', '简装', '精装', '豪装', '其他'] // 保存decorationOptions相关业务数据，作为后续计算、渲染或请求的输入。
+const orientationOptions = [ // 保存orientationOptions相关业务数据，作为后续计算、渲染或请求的输入。
+  '南北', '南', '北', '东西', '东', '西', '东南', '西南', '东北', '西北', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+] // 完成当前参数、配置或响应式数据结构的组装。
+const listingTypeOptions = ['二手房', '新房', '出租'] // 保存listingTypeOptions相关业务数据，作为后续计算、渲染或请求的输入。
+const ownershipTypeOptions = ['商品房', '已购公房', '经济适用房', '央产房', '私产', '其他'] // 保存ownershipTypeOptions相关业务数据，作为后续计算、渲染或请求的输入。
+const propertyRightOptions = ['非共有', '共有'] // 保存propertyRightOptions相关业务数据，作为后续计算、渲染或请求的输入。
+const mortgageOptions = ['无抵押', '有抵押', '有抵押业主自还', '有抵押客户偿还', '其他'] // 保存mortgageOptions相关业务数据，作为后续计算、渲染或请求的输入。
 
-const formRules = {
-  title: [{ required: true, message: '请输入房源标题', trigger: 'blur' }],
-  district_id: [{ required: true, message: '请选择区域', trigger: 'change' }],
-}
+const formRules = { // 保存formRules相关业务数据，作为后续计算、渲染或请求的输入。
+  title: [{ required: true, message: '请输入房源标题', trigger: 'blur' }], // 声明title字段，作为组件配置、请求参数或图表数据的一部分。
+  district_id: [{ required: true, message: '请选择区域', trigger: 'change' }], // 声明district_id字段，作为组件配置、请求参数或图表数据的一部分。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：打开新增房源对话框并重置表单状态。
-async function openCreate() {
-  await loadAllCities()
-  dialogTitle.value = '新增房源'
-  isEdit.value = false
-  editId.value = null
-  Object.assign(form, defaultForm())
-  selectedProvince.value = ''
-  selectedCityId.value = null
-  districts.value = []
-  dialogVisible.value = true
-}
+async function openCreate() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  await loadAllCities() // 等待异步接口或资源加载完成，再继续更新页面状态。
+  dialogTitle.value = '新增房源' // 更新dialogTitle.value对应的页面状态，使界面展示与最新业务数据一致。
+  isEdit.value = false // 更新isEdit.value对应的页面状态，使界面展示与最新业务数据一致。
+  editId.value = null // 更新editId.value对应的页面状态，使界面展示与最新业务数据一致。
+  Object.assign(form, defaultForm()) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  selectedProvince.value = '' // 更新selectedProvince.value对应的页面状态，使界面展示与最新业务数据一致。
+  selectedCityId.value = null // 更新selectedCityId.value对应的页面状态，使界面展示与最新业务数据一致。
+  districts.value = [] // 更新districts.value对应的页面状态，使界面展示与最新业务数据一致。
+  dialogVisible.value = true // 更新dialogVisible.value对应的页面状态，使界面展示与最新业务数据一致。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：打开编辑房源对话框并回填当前行数据。
-async function openEdit(row) {
-  await loadAllCities()
-  dialogTitle.value = '编辑房源'
-  isEdit.value = true
-  editId.value = row.id
+async function openEdit(row) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  await loadAllCities() // 等待异步接口或资源加载完成，再继续更新页面状态。
+  dialogTitle.value = '编辑房源' // 更新dialogTitle.value对应的页面状态，使界面展示与最新业务数据一致。
+  isEdit.value = true // 更新isEdit.value对应的页面状态，使界面展示与最新业务数据一致。
+  editId.value = row.id // 更新editId.value对应的页面状态，使界面展示与最新业务数据一致。
 
   // 填充表单数据：房源主体字段来自 Property，交易扩展字段来自 transaction。
-  const t = row.transaction || {}
-  Object.assign(form, {
-    district_id: row.district_id,
-    title: row.title,
-    total_price: row.total_price,
-    unit_price: row.unit_price,
-    area: row.area,
-    rooms: row.rooms ?? 0,
-    halls: row.halls ?? 0,
-    floor: row.floor,
-    total_floors: row.total_floors,
-    build_year: row.build_year,
-    orientation: row.orientation || '',
-    decoration: row.decoration || '',
-    has_elevator: row.has_elevator ?? false,
-    listing_type: row.listing_type || '二手房',
-    lng: row.lng,
-    lat: row.lat,
-    source: row.source || 'manual',
-    source_url: row.source_url || '',
-    listing_date: t.listing_date || '',
-    ownership_type: t.ownership_type || '',
-    property_right: t.property_right || '',
-    mortgage: t.mortgage || '',
-    selling_point: t.selling_point || '',
-    community_intro: t.community_intro || '',
-    layout_intro: t.layout_intro || '',
-    transport_intro: t.transport_intro || '',
-  })
+  const t = row.transaction || {} // 保存t相关业务数据，作为后续计算、渲染或请求的输入。
+  Object.assign(form, { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    district_id: row.district_id, // 声明district_id字段，作为组件配置、请求参数或图表数据的一部分。
+    title: row.title, // 声明title字段，作为组件配置、请求参数或图表数据的一部分。
+    total_price: row.total_price, // 声明total_price字段，作为组件配置、请求参数或图表数据的一部分。
+    unit_price: row.unit_price, // 声明unit_price字段，作为组件配置、请求参数或图表数据的一部分。
+    area: row.area, // 声明area字段，作为组件配置、请求参数或图表数据的一部分。
+    rooms: row.rooms ?? 0, // 声明rooms字段，作为组件配置、请求参数或图表数据的一部分。
+    halls: row.halls ?? 0, // 声明halls字段，作为组件配置、请求参数或图表数据的一部分。
+    floor: row.floor, // 声明floor字段，作为组件配置、请求参数或图表数据的一部分。
+    total_floors: row.total_floors, // 声明total_floors字段，作为组件配置、请求参数或图表数据的一部分。
+    build_year: row.build_year, // 声明build_year字段，作为组件配置、请求参数或图表数据的一部分。
+    orientation: row.orientation || '', // 声明orientation字段，作为组件配置、请求参数或图表数据的一部分。
+    decoration: row.decoration || '', // 声明decoration字段，作为组件配置、请求参数或图表数据的一部分。
+    has_elevator: row.has_elevator ?? false, // 声明has_elevator字段，作为组件配置、请求参数或图表数据的一部分。
+    listing_type: row.listing_type || '二手房', // 声明listing_type字段，作为组件配置、请求参数或图表数据的一部分。
+    lng: row.lng, // 声明lng字段，作为组件配置、请求参数或图表数据的一部分。
+    lat: row.lat, // 声明lat字段，作为组件配置、请求参数或图表数据的一部分。
+    source: row.source || 'manual', // 声明source字段，作为组件配置、请求参数或图表数据的一部分。
+    source_url: row.source_url || '', // 声明source_url字段，作为组件配置、请求参数或图表数据的一部分。
+    listing_date: t.listing_date || '', // 声明listing_date字段，作为组件配置、请求参数或图表数据的一部分。
+    ownership_type: t.ownership_type || '', // 声明ownership_type字段，作为组件配置、请求参数或图表数据的一部分。
+    property_right: t.property_right || '', // 声明property_right字段，作为组件配置、请求参数或图表数据的一部分。
+    mortgage: t.mortgage || '', // 声明mortgage字段，作为组件配置、请求参数或图表数据的一部分。
+    selling_point: t.selling_point || '', // 声明selling_point字段，作为组件配置、请求参数或图表数据的一部分。
+    community_intro: t.community_intro || '', // 声明community_intro字段，作为组件配置、请求参数或图表数据的一部分。
+    layout_intro: t.layout_intro || '', // 声明layout_intro字段，作为组件配置、请求参数或图表数据的一部分。
+    transport_intro: t.transport_intro || '', // 声明transport_intro字段，作为组件配置、请求参数或图表数据的一部分。
+  }) // 完成当前参数、配置或响应式数据结构的组装。
 
   // 根据 district_id 反查省/市/区并级联
-  selectedProvince.value = ''
-  selectedCityId.value = null
-  districts.value = []
+  selectedProvince.value = '' // 更新selectedProvince.value对应的页面状态，使界面展示与最新业务数据一致。
+  selectedCityId.value = null // 更新selectedCityId.value对应的页面状态，使界面展示与最新业务数据一致。
+  districts.value = [] // 更新districts.value对应的页面状态，使界面展示与最新业务数据一致。
 
-  if (!row.district_id) {
-    dialogVisible.value = true
-    return
-  }
+  if (!row.district_id) { // 根据当前状态、接口结果或用户输入选择对应交互路径。
+    dialogVisible.value = true // 更新dialogVisible.value对应的页面状态，使界面展示与最新业务数据一致。
+    return // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  } // 完成当前参数、配置或响应式数据结构的组装。
 
   // 遍历所有城市找到包含该区的那一个
-  for (const c of allCities.value) {
-    try {
-      const dists = await getCityDistricts(c.id)
-      const found = dists.find((d) => d.id === row.district_id)
-      if (found) {
-        selectedProvince.value = c.province || '其他'
-        selectedCityId.value = c.id
-        districts.value = dists
-        await nextTick()
-        form.district_id = row.district_id
-        break
-      }
-    } catch {
+  for (const c of allCities.value) { // 遍历当前数据集合，逐项转换为图表、地图或表单需要的结构。
+    try { // 开始执行可能失败的接口请求或异步页面更新。
+      const dists = await getCityDistricts(c.id) // 保存dists相关业务数据，作为后续计算、渲染或请求的输入。
+      const found = dists.find((d) => d.id === row.district_id) // 保存found相关业务数据，作为后续计算、渲染或请求的输入。
+      if (found) { // 根据当前状态、接口结果或用户输入选择对应交互路径。
+        selectedProvince.value = c.province || '其他' // 更新selectedProvince.value对应的页面状态，使界面展示与最新业务数据一致。
+        selectedCityId.value = c.id // 更新selectedCityId.value对应的页面状态，使界面展示与最新业务数据一致。
+        districts.value = dists // 更新districts.value对应的页面状态，使界面展示与最新业务数据一致。
+        await nextTick() // 等待异步接口或资源加载完成，再继续更新页面状态。
+        form.district_id = row.district_id // 更新form.district_id对应的页面状态，使界面展示与最新业务数据一致。
+        break // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+      } // 完成当前参数、配置或响应式数据结构的组装。
+    } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
       // continue trying other cities
-    }
-  }
+    } // 完成当前参数、配置或响应式数据结构的组装。
+  } // 完成当前参数、配置或响应式数据结构的组装。
 
-  dialogVisible.value = true
-}
+  dialogVisible.value = true // 更新dialogVisible.value对应的页面状态，使界面展示与最新业务数据一致。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：跳转到房源详情页面。
-function openDetail(row) {
-  if (!row?.id) return
-  router.push({ name: 'property-detail', params: { id: row.id } })
-}
+function openDetail(row) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (!row?.id) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  router.push({ name: 'property-detail', params: { id: row.id } }) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：校验并提交新增或编辑房源表单。
-async function handleSubmit() {
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+async function handleSubmit() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  const valid = await formRef.value.validate().catch(() => false) // 保存valid相关业务数据，作为后续计算、渲染或请求的输入。
+  if (!valid) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
 
-  submitting.value = true
-  const payload = { ...form }
+  submitting.value = true // 更新submitting.value对应的页面状态，使界面展示与最新业务数据一致。
+  const payload = { ...form } // 保存payload相关业务数据，作为后续计算、渲染或请求的输入。
   // 清理空字符串：用 null 表达“未填写”，方便后端删除或跳过交易扩展字段。
-  if (payload.orientation === '') payload.orientation = null
-  if (payload.decoration === '') payload.decoration = null
-  if (payload.source_url === '') payload.source_url = null
-  for (const field of [
-    'listing_date',
-    'ownership_type',
-    'property_right',
-    'mortgage',
-    'selling_point',
-    'community_intro',
-    'layout_intro',
-    'transport_intro',
-  ]) {
-    if (payload[field] === '') payload[field] = null
-  }
+  if (payload.orientation === '') payload.orientation = null // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  if (payload.decoration === '') payload.decoration = null // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  if (payload.source_url === '') payload.source_url = null // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  for (const field of [ // 遍历当前数据集合，逐项转换为图表、地图或表单需要的结构。
+    'listing_date', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'ownership_type', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'property_right', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'mortgage', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'selling_point', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'community_intro', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'layout_intro', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    'transport_intro', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  ]) { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    if (payload[field] === '') payload[field] = null // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  } // 完成当前参数、配置或响应式数据结构的组装。
 
-  try {
-    let savedProperty = null
-    if (isEdit.value) {
-      savedProperty = await adminUpdateProperty(editId.value, payload)
-      ElMessage.success('房源已更新')
-    } else {
-      savedProperty = await adminCreateProperty(payload)
-      ElMessage.success('房源已创建')
-    }
-    dialogVisible.value = false
-    fetchList()
+  try { // 开始执行可能失败的接口请求或异步页面更新。
+    let savedProperty = null // 保存savedProperty相关业务数据，作为后续计算、渲染或请求的输入。
+    if (isEdit.value) { // 根据当前状态、接口结果或用户输入选择对应交互路径。
+      savedProperty = await adminUpdateProperty(editId.value, payload) // 等待异步接口或资源加载完成，再继续更新页面状态。
+      ElMessage.success('房源已更新') // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    } else { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+      savedProperty = await adminCreateProperty(payload) // 等待异步接口或资源加载完成，再继续更新页面状态。
+      ElMessage.success('房源已创建') // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    } // 完成当前参数、配置或响应式数据结构的组装。
+    dialogVisible.value = false // 更新dialogVisible.value对应的页面状态，使界面展示与最新业务数据一致。
+    fetchList() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
 
-    if (!isEdit.value && savedProperty?.id) {
-      ElMessageBox.confirm('房源已创建，是否立即查看详情页？', '创建成功', {
-        type: 'success',
-        confirmButtonText: '查看详情',
-        cancelButtonText: '继续管理',
-      })
-        .then(() => openDetail(savedProperty))
-        .catch(() => {})
-    }
-  } catch {
+    if (!isEdit.value && savedProperty?.id) { // 根据当前状态、接口结果或用户输入选择对应交互路径。
+      ElMessageBox.confirm('房源已创建，是否立即查看详情页？', '创建成功', { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+        type: 'success', // 声明type字段，作为组件配置、请求参数或图表数据的一部分。
+        confirmButtonText: '查看详情', // 声明confirmButtonText字段，作为组件配置、请求参数或图表数据的一部分。
+        cancelButtonText: '继续管理', // 声明cancelButtonText字段，作为组件配置、请求参数或图表数据的一部分。
+      }) // 完成当前参数、配置或响应式数据结构的组装。
+        .then(() => openDetail(savedProperty)) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+        .catch(() => {}) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    } // 完成当前参数、配置或响应式数据结构的组装。
+  } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
     // handled by interceptor
-  } finally {
-    submitting.value = false
-  }
-}
+  } finally { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    submitting.value = false // 更新submitting.value对应的页面状态，使界面展示与最新业务数据一致。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：确认后删除指定房源并刷新列表。
-async function handleDelete(row) {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除房源「${row.title}」吗？删除后不可恢复。`,
-      '删除确认',
-      { type: 'warning', confirmButtonText: '确定删除', cancelButtonText: '取消' },
-    )
-    await adminDeleteProperty(row.id)
-    ElMessage.success('已删除')
-    fetchList()
-  } catch {
+async function handleDelete(row) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  try { // 开始执行可能失败的接口请求或异步页面更新。
+    await ElMessageBox.confirm( // 等待异步接口或资源加载完成，再继续更新页面状态。
+      `确定要删除房源「${row.title}」吗？删除后不可恢复。`, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+      '删除确认', // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+      { type: 'warning', confirmButtonText: '确定删除', cancelButtonText: '取消' }, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    ) // 完成当前参数、配置或响应式数据结构的组装。
+    await adminDeleteProperty(row.id) // 等待异步接口或资源加载完成，再继续更新页面状态。
+    ElMessage.success('已删除') // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+    fetchList() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  } catch { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
     // cancelled or error
-  }
-}
+  } // 完成当前参数、配置或响应式数据结构的组装。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
 // ---------- 表格格式化 ----------
 // 函数功能：格式化总价展示文本。
-function formatPrice(val) {
-  if (val == null) return '-'
-  return `${val} 万`
-}
+function formatPrice(val) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (val == null) return '-' // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  return `${val} 万` // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+} // 完成当前参数、配置或响应式数据结构的组装。
 // 函数功能：格式化单价展示文本。
-function formatUnitPrice(val) {
-  if (val == null) return '-'
-  return `${val} 元/㎡`
-}
+function formatUnitPrice(val) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (val == null) return '-' // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  return `${val} 元/㎡` // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+} // 完成当前参数、配置或响应式数据结构的组装。
 // 函数功能：格式化面积展示文本。
-function formatArea(val) {
-  if (val == null) return '-'
-  return `${val} ㎡`
-}
+function formatArea(val) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (val == null) return '-' // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  return `${val} ㎡` // 返回整理后的数据或视图状态，供调用方继续渲染或处理。
+} // 完成当前参数、配置或响应式数据结构的组装。
 </script>
 
 <template>
@@ -838,34 +838,34 @@ function formatArea(val) {
 </template>
 
 <style scoped>
-.admin-page {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 20px 40px;
-}
+.admin-page { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  max-width: 1280px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  margin: 0 auto; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  padding: 24px 20px 40px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
+.page-header { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  display: flex; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  align-items: center; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  justify-content: space-between; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  margin-bottom: 20px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.page-header h2 {
-  margin: 0;
-  font-size: 22px;
-  color: #1e3a8a;
-}
+.page-header h2 { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  margin: 0; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  font-size: 22px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  color: #1e3a8a; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
+.toolbar { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  display: flex; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  gap: 12px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  margin-bottom: 16px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 
-.pagination-wrap {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
+.pagination-wrap { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  display: flex; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  justify-content: flex-end; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  margin-top: 16px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 </style>

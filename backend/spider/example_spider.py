@@ -3,27 +3,27 @@
 真实使用时：把 ``SAMPLE_HTML`` 换成 ``self.fetch(list_page_url)`` 的返回值，并把
 ``parse`` 里的选择器换成目标页面的真实结构。务必遵守目标站点的 robots.txt 与 ToS。
 """
-import re
-from typing import Iterable
+import re  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from typing import Iterable  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
 
-from .base import BaseSpider
+from .base import BaseSpider  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
 
 # 一段构造的示例列表页 HTML（仅用于演示解析逻辑）。
-SAMPLE_HTML = """
-<ul class="sellListContent">
-  <li class="clear">
-    <div class="title"><a href="https://example.com/h/1001">海淀学区两居 满五唯一</a></div>
-    <div class="houseInfo">海淀区 | 2室1厅 | 89.5平米 | 南北 | 精装 | 有电梯</div>
-    <div class="totalPrice"><span>880</span>万</div>
-    <div class="unitPrice"><span>98324</span>元/平</div>
-  </li>
-  <li class="clear">
-    <div class="title"><a href="https://example.com/h/1002">朝阳精装三居 近地铁</a></div>
-    <div class="houseInfo">朝阳区 | 3室2厅 | 132平米 | 南 | 简装 | 有电梯</div>
-    <div class="totalPrice"><span>1020</span>万</div>
-    <div class="unitPrice"><span>77272</span>元/平</div>
-  </li>
-</ul>
+SAMPLE_HTML = """  # 计算或更新SAMPLE_HTML中间数据，作为后续业务判断、统计或响应组装的输入。
+<ul class="sellListContent">  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+  <li class="clear">  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="title"><a href="https://example.com/h/1001">海淀学区两居 满五唯一</a></div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="houseInfo">海淀区 | 2室1厅 | 89.5平米 | 南北 | 精装 | 有电梯</div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="totalPrice"><span>880</span>万</div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="unitPrice"><span>98324</span>元/平</div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+  </li>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+  <li class="clear">  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="title"><a href="https://example.com/h/1002">朝阳精装三居 近地铁</a></div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="houseInfo">朝阳区 | 3室2厅 | 132平米 | 南 | 简装 | 有电梯</div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="totalPrice"><span>1020</span>万</div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    <div class="unitPrice"><span>77272</span>元/平</div>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+  </li>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+</ul>  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
 """
 
 _ITEM_RE = re.compile(r'<li class="clear">(.*?)</li>', re.S)

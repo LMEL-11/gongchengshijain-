@@ -1,6 +1,6 @@
 <!-- 文件功能：封装数据大屏面板容器的标题、装饰和插槽布局。 -->
 <script setup>
-defineProps({ title: { type: String, default: '' } })
+defineProps({ title: { type: String, default: '' } }) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
 </script>
 
 <template>
@@ -21,79 +21,79 @@ defineProps({ title: { type: String, default: '' } })
 </template>
 
 <style scoped>
-.panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  padding: 12px 14px 10px;
-  background: linear-gradient(180deg, rgba(10, 32, 64, 0.55), rgba(6, 20, 42, 0.4));
-  border: 1px solid rgba(63, 224, 255, 0.18);
-  border-radius: 4px;
-  backdrop-filter: blur(2px);
-}
-.panel-hd {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 8px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid rgba(63, 224, 255, 0.12);
-}
-.hd-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #3fe0ff;
-  box-shadow: 0 0 8px #3fe0ff;
-}
-.hd-title {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: #d6f1ff;
-}
-.hd-extra {
-  margin-left: auto;
-  font-size: 12px;
-  color: #7fb0d8;
-}
-.panel-bd {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
-.corner {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-color: #3fe0ff;
-  border-style: solid;
-  border-width: 0;
-}
-.corner.tl {
-  top: -1px;
-  left: -1px;
-  border-top-width: 2px;
-  border-left-width: 2px;
-}
-.corner.tr {
-  top: -1px;
-  right: -1px;
-  border-top-width: 2px;
-  border-right-width: 2px;
-}
-.corner.bl {
-  bottom: -1px;
-  left: -1px;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-}
-.corner.br {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
-}
+.panel { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  position: relative; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  display: flex; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  flex-direction: column; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  flex: 1; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  min-height: 0; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  padding: 12px 14px 10px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  background: linear-gradient(180deg, rgba(10, 32, 64, 0.55), rgba(6, 20, 42, 0.4)); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  border: 1px solid rgba(63, 224, 255, 0.18); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  border-radius: 4px; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  backdrop-filter: blur(2px); /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.panel-hd { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  display: flex; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  align-items: center; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  gap: 8px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  padding-bottom: 8px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  margin-bottom: 6px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-bottom: 1px solid rgba(63, 224, 255, 0.12); /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.hd-dot { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  width: 8px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  height: 8px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  border-radius: 50%; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  background: #3fe0ff; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  box-shadow: 0 0 8px #3fe0ff; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.hd-title { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  font-size: 16px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  font-weight: 700; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  letter-spacing: 1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  color: #d6f1ff; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.hd-extra { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  margin-left: auto; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  font-size: 12px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  color: #7fb0d8; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.panel-bd { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  position: relative; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  flex: 1; /* 控制页面元素的布局方式，保证数据卡片、表格或地图区域正确排列。 */
+  min-height: 0; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.corner { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  position: absolute; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  width: 10px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  height: 10px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  border-color: #3fe0ff; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-style: solid; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-width: 0; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.corner.tl { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  top: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  left: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-top-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-left-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.corner.tr { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  top: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  right: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-top-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-right-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.corner.bl { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  bottom: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  left: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-bottom-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-left-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.corner.br { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  bottom: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  right: -1px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-bottom-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  border-right-width: 2px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 </style>

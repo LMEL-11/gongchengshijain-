@@ -1,54 +1,54 @@
 <!-- 文件功能：提供房价预测表单，加载区域选项并提交预测参数。 -->
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
 
-import { getCityDistricts, predictPrice } from '@/api'
-import { useAppStore } from '@/store/app'
+import { getCityDistricts, predictPrice } from '@/api' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import { useAppStore } from '@/store/app' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
 
-const store = useAppStore()
-const districts = ref([])
-const result = ref(null)
-const loading = ref(false)
+const store = useAppStore() // 保存store相关业务数据，作为后续计算、渲染或请求的输入。
+const districts = ref([]) // 创建行政区集合，用于驱动页面渲染、表单输入或接口参数。
+const result = ref(null) // 创建处理结果，用于驱动页面渲染、表单输入或接口参数。
+const loading = ref(false) // 创建加载状态，用于驱动页面渲染、表单输入或接口参数。
 
-const form = reactive({
-  city_id: null,
-  district_id: null,
-  area: 90,
-  rooms: 2,
-  halls: 1,
-  build_year: 2015,
-  floor: 8,
-  total_floors: 18,
-  has_elevator: true,
-})
+const form = reactive({ // 创建表单数据模型，用于驱动页面渲染、表单输入或接口参数。
+  city_id: null, // 声明city_id字段，作为组件配置、请求参数或图表数据的一部分。
+  district_id: null, // 声明district_id字段，作为组件配置、请求参数或图表数据的一部分。
+  area: 90, // 声明area字段，作为组件配置、请求参数或图表数据的一部分。
+  rooms: 2, // 声明rooms字段，作为组件配置、请求参数或图表数据的一部分。
+  halls: 1, // 声明halls字段，作为组件配置、请求参数或图表数据的一部分。
+  build_year: 2015, // 声明build_year字段，作为组件配置、请求参数或图表数据的一部分。
+  floor: 8, // 声明floor字段，作为组件配置、请求参数或图表数据的一部分。
+  total_floors: 18, // 声明total_floors字段，作为组件配置、请求参数或图表数据的一部分。
+  has_elevator: true, // 声明has_elevator字段，作为组件配置、请求参数或图表数据的一部分。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：根据当前城市加载区域选项。
-async function loadDistricts(cityId) {
-  if (!cityId) return
-  districts.value = await getCityDistricts(cityId)
-  if (districts.value.length) form.district_id = districts.value[0].id
-}
+async function loadDistricts(cityId) { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (!cityId) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  districts.value = await getCityDistricts(cityId) // 等待异步接口或资源加载完成，再继续更新页面状态。
+  if (districts.value.length) form.district_id = districts.value[0].id // 根据当前状态、接口结果或用户输入选择对应交互路径。
+} // 完成当前参数、配置或响应式数据结构的组装。
 
-watch(
-  () => form.city_id,
-  (id) => loadDistricts(id),
-)
+watch( // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
+  () => form.city_id, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+  (id) => loadDistricts(id), // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
+) // 完成当前参数、配置或响应式数据结构的组装。
 
-onMounted(async () => {
-  await store.loadCities()
-  form.city_id = store.currentCityId
-})
+onMounted(async () => { // 注册组件生命周期逻辑，负责初始化数据或释放页面资源。
+  await store.loadCities() // 等待异步接口或资源加载完成，再继续更新页面状态。
+  form.city_id = store.currentCityId // 更新form.city_id对应的页面状态，使界面展示与最新业务数据一致。
+}) // 完成当前参数、配置或响应式数据结构的组装。
 
 // 函数功能：校验表单并提交预测请求。
-async function onSubmit() {
-  if (!form.district_id) return
-  loading.value = true
-  try {
-    result.value = await predictPrice({ ...form })
-  } finally {
-    loading.value = false
-  }
-}
+async function onSubmit() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
+  if (!form.district_id) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
+  loading.value = true // 更新loading.value对应的页面状态，使界面展示与最新业务数据一致。
+  try { // 开始执行可能失败的接口请求或异步页面更新。
+    result.value = await predictPrice({ ...form }) // 等待异步接口或资源加载完成，再继续更新页面状态。
+  } finally { // 展开当前交互逻辑或数据结构，继续组织页面所需数据。
+    loading.value = false // 更新loading.value对应的页面状态，使界面展示与最新业务数据一致。
+  } // 完成当前参数、配置或响应式数据结构的组装。
+} // 完成当前参数、配置或响应式数据结构的组装。
 </script>
 
 <template>
@@ -132,34 +132,34 @@ async function onSubmit() {
 </template>
 
 <style scoped>
-.result {
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #eff6ff, #eef2ff);
-  border: 1px solid #dbeafe;
-  text-align: center;
-}
-.big {
-  font-size: 18px;
-}
-.big b {
-  font-size: 30px;
-  color: #1d4ed8;
-}
-.sub {
-  margin-top: 6px;
-  font-size: 15px;
-}
-.meta {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #64748b;
-}
-.fade-enter-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from {
-  opacity: 0;
-}
+.result { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  margin-top: 18px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  padding: 18px; /* 设置尺寸与间距，保证信息展示区域稳定且便于阅读。 */
+  border-radius: 10px; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  background: linear-gradient(135deg, #eff6ff, #eef2ff); /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  border: 1px solid #dbeafe; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+  text-align: center; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.big { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  font-size: 18px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.big b { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  font-size: 30px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  color: #1d4ed8; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.sub { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  margin-top: 6px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  font-size: 15px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.meta { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  margin-top: 8px; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+  font-size: 12px; /* 控制文字展示效果，保证指标、标签和表格内容清晰可读。 */
+  color: #64748b; /* 设置视觉层级和状态反馈，帮助用户区分数据区域和操作区域。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.fade-enter-active { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  transition: opacity 0.3s ease; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
+.fade-enter-from { /* 定义该界面区域的样式作用域，控制组件布局和视觉层级。 */
+  opacity: 0; /* 配置当前界面样式，服务于房源数据展示和交互可读性。 */
+} /* 收束该样式块，使后续选择器保持独立。 */
 </style>

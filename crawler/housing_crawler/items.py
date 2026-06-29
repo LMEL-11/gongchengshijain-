@@ -1,9 +1,9 @@
 """抓取条目定义。字段与后端 `models/property.py` 的 Property 一一对应，
 另含 city / district 用于在管道里 get_or_create 城市与行政区。"""
-import scrapy
+import scrapy  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
 
 
-class HousingItem(scrapy.Item):
+class HousingItem(scrapy.Item):  # 定义业务类或数据模型，封装该模块的数据结构与处理行为。
     """定义 Scrapy 爬取房源时在管道间传递的数据字段。"""
     # 归属（用于解析出 Property 的外键）
     city = scrapy.Field()          # 城市中文名，如 "北京"
