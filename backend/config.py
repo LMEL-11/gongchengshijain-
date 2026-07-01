@@ -4,50 +4,50 @@ Reads settings from environment variables (optionally loaded from a local
 ``.env`` file). Falls back to sensible development defaults so the project
 runs out of the box.
 """
-import os  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from pathlib import Path  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+import os  # 导入 os 模块，为当前文件提供所需功能。
+from pathlib import Path  # 从 pathlib 导入 Path，供本文件后续逻辑调用。
 
-from dotenv import load_dotenv  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from dotenv import load_dotenv  # 从 dotenv 导入 load_dotenv，供本文件后续逻辑调用。
 
-BASE_DIR = Path(__file__).resolve().parent  # 计算或更新BASE_DIR中间数据，作为后续业务判断、统计或响应组装的输入。
+BASE_DIR = Path(__file__).resolve().parent  # 设置 BASE_DIR 的值，供后续业务判断、查询或响应组装使用。
 
 # Load .env if present (does nothing in production where real env vars are set)
-load_dotenv(BASE_DIR / ".env")  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+load_dotenv(BASE_DIR / ".env")  # 执行当前代码行对应的业务处理步骤。
 
 
-def _database_url() -> str:  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """Return the configured DB URL, or a SQLite fallback for zero-config runs."""
-    url = os.getenv("DATABASE_URL", "").strip()  # 计算或更新url中间数据，作为后续业务判断、统计或响应组装的输入。
-    if url:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        return url  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+def _database_url() -> str:  # 定义 _database_url 函数，集中处理这一段业务逻辑。
+    """Return the configured DB URL, or a SQLite fallback for zero-config runs."""  # 保留字符串内容，作为说明文本或页面展示文案。
+    url = os.getenv("DATABASE_URL", "").strip()  # 设置 url 的值，供后续业务判断、查询或响应组装使用。
+    if url:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        return url  # 返回处理后的结果给调用方继续使用。
     # Fallback: local SQLite file so the app is runnable without a DB server.
-    return f"sqlite:///{BASE_DIR / 'housing.db'}"  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+    return f"sqlite:///{BASE_DIR / 'housing.db'}"  # 返回处理后的结果给调用方继续使用。
 
 
-class Config:  # 定义业务类或数据模型，封装该模块的数据结构与处理行为。
-    """集中保存 Flask、数据库、跨域和运行端口等应用配置。"""
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")  # 计算或更新SECRET_KEY中间数据，作为后续业务判断、统计或响应组装的输入。
+class Config:  # 定义 Config 类，封装对应的数据结构或业务行为。
+    """集中保存 Flask、数据库、跨域和运行端口等应用配置。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")  # 设置 SECRET_KEY 的值，供后续业务判断、查询或响应组装使用。
 
-    SQLALCHEMY_DATABASE_URI = _database_url()  # 计算或更新SQLALCHEMY_DATABASE_URI中间数据，作为后续业务判断、统计或响应组装的输入。
-    SQLALCHEMY_TRACK_MODIFICATIONS = False  # 计算或更新SQLALCHEMY_TRACK_MODIFICATIONS中间数据，作为后续业务判断、统计或响应组装的输入。
+    SQLALCHEMY_DATABASE_URI = _database_url()  # 设置 SQLALCHEMY_DATABASE_URI 的值，供后续业务判断、查询或响应组装使用。
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # 设置 SQLALCHEMY_TRACK_MODIFICATIONS 的值，供后续业务判断、查询或响应组装使用。
     # Recycle connections so MySQL doesn't drop idle ones ("server has gone away").
-    SQLALCHEMY_ENGINE_OPTIONS = {  # 初始化SQLALCHEMY_ENGINE_OPTIONS中间数据字典，用于承载接口返回或中间聚合结果。
-        "pool_pre_ping": True,  # 把pool_pre_ping字段写入响应数据，供前端页面、图表或后续接口读取。
-        "pool_recycle": 280,  # 把pool_recycle字段写入响应数据，供前端页面、图表或后续接口读取。
-    }  # 完成当前查询、参数或数据结构的组装，使上层表达式可以继续执行。
+    SQLALCHEMY_ENGINE_OPTIONS = {  # 设置 SQLALCHEMY_ENGINE_OPTIONS 的值，供后续业务判断、查询或响应组装使用。
+        "pool_pre_ping": True,  # 保留字符串内容，作为说明文本或页面展示文案。
+        "pool_recycle": 280,  # 保留字符串内容，作为说明文本或页面展示文案。
+    }  # 结束当前多行数据结构或函数调用。
 
     # JSON: keep non-ASCII (Chinese) characters readable in responses.
-    JSON_AS_ASCII = False  # 计算或更新JSON_AS_ASCII中间数据，作为后续业务判断、统计或响应组装的输入。
+    JSON_AS_ASCII = False  # 设置 JSON_AS_ASCII 的值，供后续业务判断、查询或响应组装使用。
 
-    CORS_ORIGINS = [  # 初始化CORS_ORIGINS中间数据列表，用于收集清洗后的多条业务数据。
-        o.strip()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        for o in os.getenv(  # 遍历当前数据集合，逐项完成清洗、聚合、入库或响应组装。
-            "CORS_ORIGINS",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-            "http://localhost:5173,http://127.0.0.1:5173",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        ).split(",")  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        if o.strip()  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-    ]  # 完成当前查询、参数或数据结构的组装，使上层表达式可以继续执行。
+    CORS_ORIGINS = [  # 设置 CORS_ORIGINS 的值，供后续业务判断、查询或响应组装使用。
+        o.strip()  # 执行当前代码行对应的业务处理步骤。
+        for o in os.getenv(  # 遍历当前数据集合，逐项完成处理。
+            "CORS_ORIGINS",  # 保留字符串内容，作为说明文本或页面展示文案。
+            "http://localhost:5173,http://127.0.0.1:5173",  # 保留字符串内容，作为说明文本或页面展示文案。
+        ).split(",")  # 执行当前代码行对应的业务处理步骤。
+        if o.strip()  # 判断当前条件是否成立，决定是否进入对应处理分支。
+    ]  # 结束当前多行数据结构或函数调用。
 
-    HOST = os.getenv("HOST", "127.0.0.1")  # 计算或更新HOST中间数据，作为后续业务判断、统计或响应组装的输入。
-    PORT = int(os.getenv("PORT", "5000"))  # 计算或更新PORT中间数据，作为后续业务判断、统计或响应组装的输入。
-    DEBUG = os.getenv("FLASK_ENV", "development") == "development"  # 计算或更新DEBUG中间数据，作为后续业务判断、统计或响应组装的输入。
+    HOST = os.getenv("HOST", "127.0.0.1")  # 设置 HOST 的值，供后续业务判断、查询或响应组装使用。
+    PORT = int(os.getenv("PORT", "5000"))  # 设置 PORT 的值，供后续业务判断、查询或响应组装使用。
+    DEBUG = os.getenv("FLASK_ENV", "development") == "development"  # 执行当前代码行对应的业务处理步骤。

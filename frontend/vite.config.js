@@ -1,25 +1,25 @@
 // 文件功能：配置 Vite 开发服务器、构建行为和路径别名。
-import { fileURLToPath, URL } from 'node:url' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import { fileURLToPath, URL } from 'node:url' // 导入 { fileURLToPath, URL }，供当前前端模块渲染或交互逻辑使用。
 
-import { defineConfig } from 'vite' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
-import vue from '@vitejs/plugin-vue' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import { defineConfig } from 'vite' // 导入 { defineConfig }，供当前前端模块渲染或交互逻辑使用。
+import vue from '@vitejs/plugin-vue' // 导入 vue，供当前前端模块渲染或交互逻辑使用。
 
 // https://vitejs.dev/config/
-export default defineConfig({ // 导出当前配置或接口方法，供应用其他模块复用。
-  plugins: [vue()], // 声明plugins字段，作为组件配置、请求参数或图表数据的一部分。
-  resolve: { // 声明resolve字段，作为组件配置、请求参数或图表数据的一部分。
-    alias: { // 声明alias字段，作为组件配置、请求参数或图表数据的一部分。
-      '@': fileURLToPath(new URL('./src', import.meta.url)), // 声明@字段，作为组件配置、请求参数或图表数据的一部分。
-    }, // 完成当前参数、配置或响应式数据结构的组装。
-  }, // 完成当前参数、配置或响应式数据结构的组装。
-  server: { // 声明server字段，作为组件配置、请求参数或图表数据的一部分。
-    port: 5173, // 声明port字段，作为组件配置、请求参数或图表数据的一部分。
+export default defineConfig({ // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  plugins: [vue()], // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  resolve: { // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+    alias: { // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+      '@': fileURLToPath(new URL('./src', import.meta.url)), // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+    }, // 结束当前函数、对象、数组或组件配置块。
+  }, // 结束当前函数、对象、数组或组件配置块。
+  server: { // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+    port: 5173, // 执行当前前端代码行，推动页面数据和交互流程继续运行。
     // Proxy API calls to the Flask backend so we avoid CORS during dev.
-    proxy: { // 声明proxy字段，作为组件配置、请求参数或图表数据的一部分。
-      '/api': { // 声明/api字段，作为组件配置、请求参数或图表数据的一部分。
-        target: 'http://127.0.0.1:5000', // 声明target字段，作为组件配置、请求参数或图表数据的一部分。
-        changeOrigin: true, // 声明changeOrigin字段，作为组件配置、请求参数或图表数据的一部分。
-      }, // 完成当前参数、配置或响应式数据结构的组装。
-    }, // 完成当前参数、配置或响应式数据结构的组装。
-  }, // 完成当前参数、配置或响应式数据结构的组装。
-}) // 完成当前参数、配置或响应式数据结构的组装。
+    proxy: { // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+      '/api': { // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+        target: 'http://127.0.0.1:5000', // 把 /api 开头的开发请求代理到 Flask 后端。
+        changeOrigin: true, // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+      }, // 结束当前函数、对象、数组或组件配置块。
+    }, // 结束当前函数、对象、数组或组件配置块。
+  }, // 结束当前函数、对象、数组或组件配置块。
+}) // 结束当前函数、对象、数组或组件配置块。

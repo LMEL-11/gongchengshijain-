@@ -1,45 +1,45 @@
 <!-- 文件功能：封装 ECharts 基础组件，统一初始化、渲染和尺寸监听。 -->
 <script setup>
-import * as echarts from 'echarts' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue' // 引入组件、状态或工具函数，为当前页面的数据流和交互提供依赖。
+import * as echarts from 'echarts' // 导入 * as echarts，供当前前端模块渲染或交互逻辑使用。
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue' // 导入 { nextTick, onBeforeUnmount, onMounted, ref, watch }，供当前前端模块渲染或交互逻辑使用。
 
-const props = defineProps({ // 保存props相关业务数据，作为后续计算、渲染或请求的输入。
-  option: { type: Object, required: true }, // 声明option字段，作为组件配置、请求参数或图表数据的一部分。
-  height: { type: String, default: '340px' }, // 声明height字段，作为组件配置、请求参数或图表数据的一部分。
-}) // 完成当前参数、配置或响应式数据结构的组装。
+const props = defineProps({ // 创建 props，用于保存页面状态、计算结果或接口参数。
+  option: { type: Object, required: true }, // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  height: { type: String, default: '340px' }, // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+}) // 结束当前函数、对象、数组或组件配置块。
 
-const el = ref(null) // 创建el响应式状态，用于驱动页面渲染、表单输入或接口参数。
-let chart = null // 保存chart相关业务数据，作为后续计算、渲染或请求的输入。
+const el = ref(null) // 创建 el，用于保存页面状态、计算结果或接口参数。
+let chart = null // 创建 chart，用于保存页面状态、计算结果或接口参数。
 
 // 函数功能：根据当前配置渲染或更新 ECharts 图表。
-function render() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
-  if (!el.value) return // 根据当前状态、接口结果或用户输入选择对应交互路径。
-  if (!chart) chart = echarts.init(el.value) // 根据当前状态、接口结果或用户输入选择对应交互路径。
+function render() { // 定义 render 函数，处理页面交互、数据加载或状态同步。
+  if (!el.value) return // 根据当前页面状态或接口结果决定是否进入该分支。
+  if (!chart) chart = echarts.init(el.value) // 根据当前页面状态或接口结果决定是否进入该分支。
   // `true` clears the previous option so removed series don't linger.
-  chart.setOption(props.option, true) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-} // 完成当前参数、配置或响应式数据结构的组装。
+  chart.setOption(props.option, true) // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+} // 结束当前函数、对象、数组或组件配置块。
 
 // 函数功能：根据容器或窗口变化刷新组件尺寸。
-function resize() { // 定义函数入口，负责接口请求、状态更新或页面交互处理。
-  chart?.resize() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-} // 完成当前参数、配置或响应式数据结构的组装。
+function resize() { // 定义 resize 函数，处理页面交互、数据加载或状态同步。
+  chart?.resize() // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+} // 结束当前函数、对象、数组或组件配置块。
 
-onMounted(() => { // 注册组件生命周期逻辑，负责初始化数据或释放页面资源。
-  render() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-  window.addEventListener('resize', resize) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-}) // 完成当前参数、配置或响应式数据结构的组装。
+onMounted(() => { // 定义箭头函数回调，处理异步结果、事件或响应式变化。
+  render() // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  window.addEventListener('resize', resize) // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+}) // 结束当前函数、对象、数组或组件配置块。
 
-watch( // 监听响应式数据变化，并在变化后同步关联选项或视图状态。
-  () => props.option, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-  () => nextTick(render), // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-  { deep: true }, // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-) // 完成当前参数、配置或响应式数据结构的组装。
+watch( // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  () => props.option, // 设置  的值，作为后续渲染、计算或请求的输入。
+  () => nextTick(render), // 设置  的值，作为后续渲染、计算或请求的输入。
+  { deep: true }, // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+) // 结束当前函数、对象、数组或组件配置块。
 
-onBeforeUnmount(() => { // 注册组件生命周期逻辑，负责初始化数据或释放页面资源。
-  window.removeEventListener('resize', resize) // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-  chart?.dispose() // 执行当前前端业务步骤，推动接口数据、状态和视图继续同步。
-  chart = null // 更新chart对应的页面状态，使界面展示与最新业务数据一致。
-}) // 完成当前参数、配置或响应式数据结构的组装。
+onBeforeUnmount(() => { // 定义箭头函数回调，处理异步结果、事件或响应式变化。
+  window.removeEventListener('resize', resize) // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  chart?.dispose() // 执行当前前端代码行，推动页面数据和交互流程继续运行。
+  chart = null // 设置 chart 的值，作为后续渲染、计算或请求的输入。
+}) // 结束当前函数、对象、数组或组件配置块。
 </script>
 
 <template>

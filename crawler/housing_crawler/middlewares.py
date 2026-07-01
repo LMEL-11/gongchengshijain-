@@ -5,20 +5,20 @@
 """
 
 
-class CookieHeaderMiddleware:  # 定义业务类或数据模型，封装该模块的数据结构与处理行为。
-    """若配置了 LIANJIA_COOKIE，则在每个 lianjia 请求上附加该 Cookie 头。"""
+class CookieHeaderMiddleware:  # 定义 CookieHeaderMiddleware 类，封装对应的数据结构或业务行为。
+    """若配置了 LIANJIA_COOKIE，则在每个 lianjia 请求上附加该 Cookie 头。"""  # 保留字符串内容，作为说明文本或页面展示文案。
 
-    def __init__(self, cookie):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-        """初始化对象实例并保存必要的运行状态。"""
-        self.cookie = (cookie or "").strip()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    def __init__(self, cookie):  # 定义 __init__ 函数，集中处理这一段业务逻辑。
+        """初始化对象实例并保存必要的运行状态。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+        self.cookie = (cookie or "").strip()  # 设置 self.cookie 的值，供后续业务判断、查询或响应组装使用。
 
-    @classmethod  # 把下方函数注册为路由、权限校验或框架回调入口。
-    def from_crawler(cls, crawler):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-        """从 Scrapy crawler 创建中间件实例。"""
-        return cls(crawler.settings.get("LIANJIA_COOKIE", ""))  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+    @classmethod  # 把下方函数注册为框架回调、路由入口或权限装饰逻辑。
+    def from_crawler(cls, crawler):  # 定义 from_crawler 函数，集中处理这一段业务逻辑。
+        """从 Scrapy crawler 创建中间件实例。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+        return cls(crawler.settings.get("LIANJIA_COOKIE", ""))  # 返回处理后的结果给调用方继续使用。
 
-    def process_request(self, request, spider):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-        """为请求随机附加 Cookie 和 User-Agent 请求头。"""
-        if self.cookie and "lianjia.com" in request.url:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-            request.headers["Cookie"] = self.cookie  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        return None  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+    def process_request(self, request, spider):  # 定义 process_request 函数，集中处理这一段业务逻辑。
+        """为请求随机附加 Cookie 和 User-Agent 请求头。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+        if self.cookie and "lianjia.com" in request.url:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+            request.headers["Cookie"] = self.cookie  # 设置 request.headers["Cookie" 的值，供后续业务判断、查询或响应组装使用。
+        return None  # 返回处理后的结果给调用方继续使用。

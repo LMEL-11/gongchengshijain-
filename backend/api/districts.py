@@ -1,40 +1,40 @@
-"""行政区相关接口 /api/districts"""
-from flask import Blueprint, abort  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+"""行政区相关接口 /api/districts"""  # 保留字符串内容，作为说明文本或页面展示文案。
+from flask import Blueprint, abort  # 从 flask 导入 Blueprint, abort，供本文件后续逻辑调用。
 
-from extensions import db  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from models import District, Facility  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from services import analysis  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from extensions import db  # 从 extensions 导入 db，供本文件后续逻辑调用。
+from models import District, Facility  # 从 models 导入 District, Facility，供本文件后续逻辑调用。
+from services import analysis  # 从 services 导入 analysis，供本文件后续逻辑调用。
 
-from .utils import ok  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from .utils import ok  # 从 .utils 导入 ok，供本文件后续逻辑调用。
 
-bp = Blueprint("districts", __name__, url_prefix="/api/districts")  # 计算或更新bp中间数据，作为后续业务判断、统计或响应组装的输入。
-
-
-@bp.get("/<int:district_id>")  # 把下方函数注册为路由、权限校验或框架回调入口。
-def get_district(district_id: int):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """按编号查询区域详情，找不到时返回 404。"""
-    district = db.session.get(District, district_id)  # 计算或更新district中间数据，作为后续业务判断、统计或响应组装的输入。
-    if not district:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        abort(404)  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    return ok(district.to_dict())  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+bp = Blueprint("districts", __name__, url_prefix="/api/districts")  # 设置 bp 的值，供后续业务判断、查询或响应组装使用。
 
 
-@bp.get("/<int:district_id>/facilities")  # 把下方函数注册为路由、权限校验或框架回调入口。
-def district_facilities(district_id: int):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """返回指定区域周边配套设施列表。"""
-    if not db.session.get(District, district_id):  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        abort(404)  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    rows = (  # 计算或更新查询结果集合，作为后续业务判断、统计或响应组装的输入。
-        db.session.query(Facility)  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        .filter(Facility.district_id == district_id)  # 给数据库查询追加过滤条件，收窄本次统计或列表的数据范围。
-        .all()  # 执行查询并取回结果，作为后续数据转换的输入。
-    )  # 完成当前查询、参数或数据结构的组装，使上层表达式可以继续执行。
-    return ok([f.to_dict() for f in rows])  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+@bp.get("/<int:district_id>")  # 把下方函数注册为框架回调、路由入口或权限装饰逻辑。
+def get_district(district_id: int):  # 定义 get_district 函数，集中处理这一段业务逻辑。
+    """按编号查询区域详情，找不到时返回 404。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    district = db.session.get(District, district_id)  # 设置 district 的值，供后续业务判断、查询或响应组装使用。
+    if not district:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        abort(404)  # 执行当前代码行对应的业务处理步骤。
+    return ok(district.to_dict())  # 返回处理后的结果给调用方继续使用。
 
 
-@bp.get("/<int:district_id>/price-trend")  # 把下方函数注册为路由、权限校验或框架回调入口。
-def district_price_trend(district_id: int):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """返回指定区域的房价历史趋势数据。"""
-    if not db.session.get(District, district_id):  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        abort(404)  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    return ok(analysis.price_trend(district_id))  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+@bp.get("/<int:district_id>/facilities")  # 把下方函数注册为框架回调、路由入口或权限装饰逻辑。
+def district_facilities(district_id: int):  # 定义 district_facilities 函数，集中处理这一段业务逻辑。
+    """返回指定区域周边配套设施列表。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    if not db.session.get(District, district_id):  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        abort(404)  # 执行当前代码行对应的业务处理步骤。
+    rows = (  # 设置 rows 的值，供后续业务判断、查询或响应组装使用。
+        db.session.query(Facility)  # 构造数据库查询，用于读取、筛选或聚合业务数据。
+        .filter(Facility.district_id == district_id)  # 给数据库查询追加过滤条件，收窄本次处理的数据范围。
+        .all()  # 执行查询并取回结果，作为后续转换或响应组装的输入。
+    )  # 结束当前多行数据结构或函数调用。
+    return ok([f.to_dict() for f in rows])  # 返回处理后的结果给调用方继续使用。
+
+
+@bp.get("/<int:district_id>/price-trend")  # 把下方函数注册为框架回调、路由入口或权限装饰逻辑。
+def district_price_trend(district_id: int):  # 定义 district_price_trend 函数，集中处理这一段业务逻辑。
+    """返回指定区域的房价历史趋势数据。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    if not db.session.get(District, district_id):  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        abort(404)  # 执行当前代码行对应的业务处理步骤。
+    return ok(analysis.price_trend(district_id))  # 返回处理后的结果给调用方继续使用。

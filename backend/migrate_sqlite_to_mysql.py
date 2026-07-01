@@ -1,56 +1,56 @@
-"""文件功能：将旧 SQLite 数据库中的城市、区域、房源和价格历史数据迁移到当前数据库。"""
+"""文件功能：将旧 SQLite 数据库中的城市、区域、房源和价格历史数据迁移到当前数据库。"""  # 保留字符串内容，作为说明文本或页面展示文案。
 
-import os  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from pathlib import Path  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+import os  # 导入 os 模块，为当前文件提供所需功能。
+from pathlib import Path  # 从 pathlib 导入 Path，供本文件后续逻辑调用。
 
-from sqlalchemy import create_engine  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from sqlalchemy.orm import sessionmaker  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from sqlalchemy import create_engine  # 从 sqlalchemy 导入 create_engine，供本文件后续逻辑调用。
+from sqlalchemy.orm import sessionmaker  # 从 sqlalchemy.orm 导入 sessionmaker，供本文件后续逻辑调用。
 
-from app import create_app  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from extensions import db  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from models import City, District, Property, Facility, PriceHistory  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from app import create_app  # 从 app 导入 create_app，供本文件后续逻辑调用。
+from extensions import db  # 从 extensions 导入 db，供本文件后续逻辑调用。
+from models import City, District, Property, Facility, PriceHistory  # 从 models 导入 City, District, Property, Facility, PriceHistory，供本文件后续逻辑调用。
 
-BASE_DIR = Path(__file__).resolve().parent  # 计算或更新BASE_DIR中间数据，作为后续业务判断、统计或响应组装的输入。
-SQLITE_URL = f"sqlite:///{BASE_DIR / 'housing.db'}"  # 计算或更新SQLITE_URL中间数据，作为后续业务判断、统计或响应组装的输入。
+BASE_DIR = Path(__file__).resolve().parent  # 设置 BASE_DIR 的值，供后续业务判断、查询或响应组装使用。
+SQLITE_URL = f"sqlite:///{BASE_DIR / 'housing.db'}"  # 设置 SQLITE_URL 的值，供后续业务判断、查询或响应组装使用。
 
-TABLES = [City, District, Property, Facility, PriceHistory]  # 初始化TABLES中间数据列表，用于收集清洗后的多条业务数据。
-
-
-def copy_row(obj, model):  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """按模型字段把旧库记录复制成新库模型实例。"""
-    data = {  # 初始化响应数据结构字典，用于承载接口返回或中间聚合结果。
-        col.name: getattr(obj, col.name)  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        for col in model.__table__.columns  # 遍历当前数据集合，逐项完成清洗、聚合、入库或响应组装。
-    }  # 完成当前查询、参数或数据结构的组装，使上层表达式可以继续执行。
-    return model(**data)  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+TABLES = [City, District, Property, Facility, PriceHistory]  # 设置 TABLES 的值，供后续业务判断、查询或响应组装使用。
 
 
-def main():  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """作为脚本入口执行当前文件的主要导入、迁移或启动流程。"""
-    mysql_app = create_app()  # 计算或更新mysql_app中间数据，作为后续业务判断、统计或响应组装的输入。
+def copy_row(obj, model):  # 定义 copy_row 函数，集中处理这一段业务逻辑。
+    """按模型字段把旧库记录复制成新库模型实例。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    data = {  # 设置 data 的值，供后续业务判断、查询或响应组装使用。
+        col.name: getattr(obj, col.name)  # 执行当前代码行对应的业务处理步骤。
+        for col in model.__table__.columns  # 遍历当前数据集合，逐项完成处理。
+    }  # 结束当前多行数据结构或函数调用。
+    return model(**data)  # 返回处理后的结果给调用方继续使用。
 
-    sqlite_engine = create_engine(SQLITE_URL)  # 计算或更新sqlite_engine中间数据，作为后续业务判断、统计或响应组装的输入。
-    SQLiteSession = sessionmaker(bind=sqlite_engine)  # 计算或更新SQLiteSession中间数据，作为后续业务判断、统计或响应组装的输入。
-    sqlite_session = SQLiteSession()  # 计算或更新sqlite_session中间数据，作为后续业务判断、统计或响应组装的输入。
 
-    with mysql_app.app_context():  # 在受控上下文中处理文件、网络或数据库资源，避免资源泄漏。
-        db.create_all()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+def main():  # 定义 main 函数，集中处理这一段业务逻辑。
+    """作为脚本入口执行当前文件的主要导入、迁移或启动流程。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    mysql_app = create_app()  # 设置 mysql_app 的值，供后续业务判断、查询或响应组装使用。
+
+    sqlite_engine = create_engine(SQLITE_URL)  # 设置 sqlite_engine 的值，供后续业务判断、查询或响应组装使用。
+    SQLiteSession = sessionmaker(bind=sqlite_engine)  # 设置 SQLiteSession 的值，供后续业务判断、查询或响应组装使用。
+    sqlite_session = SQLiteSession()  # 设置 sqlite_session 的值，供后续业务判断、查询或响应组装使用。
+
+    with mysql_app.app_context():  # 进入上下文管理流程，自动处理资源打开和释放。
+        db.create_all()  # 执行当前代码行对应的业务处理步骤。
 
         # 按外键依赖顺序清空 MySQL 表
-        for model in reversed(TABLES):  # 遍历当前数据集合，逐项完成清洗、聚合、入库或响应组装。
-            db.session.query(model).delete()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-        db.session.commit()  # 把对象状态同步到数据库会话，完成新增、删除、提交或主键回填。
+        for model in reversed(TABLES):  # 遍历当前数据集合，逐项完成处理。
+            db.session.query(model).delete()  # 构造数据库查询，用于读取、筛选或聚合业务数据。
+        db.session.commit()  # 同步数据库会话状态，完成新增、删除、提交或主键回填。
 
         # 按依赖顺序复制数据，保留原 id
-        for model in TABLES:  # 遍历当前数据集合，逐项完成清洗、聚合、入库或响应组装。
-            rows = sqlite_session.query(model).all()  # 计算或更新查询结果集合，作为后续业务判断、统计或响应组装的输入。
-            db.session.bulk_save_objects([copy_row(row, model) for row in rows])  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-            db.session.commit()  # 把对象状态同步到数据库会话，完成新增、删除、提交或主键回填。
-            print(f"{model.__tablename__}: {len(rows)} rows copied")  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+        for model in TABLES:  # 遍历当前数据集合，逐项完成处理。
+            rows = sqlite_session.query(model).all()  # 构造数据库查询，用于读取、筛选或聚合业务数据。
+            db.session.bulk_save_objects([copy_row(row, model) for row in rows])  # 执行当前代码行对应的业务处理步骤。
+            db.session.commit()  # 同步数据库会话状态，完成新增、删除、提交或主键回填。
+            print(f"{model.__tablename__}: {len(rows)} rows copied")  # 输出当前处理结果或运行状态，方便调试和观察流程。
 
-    sqlite_session.close()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    print("migration done")  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+    sqlite_session.close()  # 执行当前代码行对应的业务处理步骤。
+    print("migration done")  # 输出当前处理结果或运行状态，方便调试和观察流程。
 
 
-if __name__ == "__main__":  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-    main()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+if __name__ == "__main__":  # 判断当前条件是否成立，决定是否进入对应处理分支。
+    main()  # 执行当前代码行对应的业务处理步骤。

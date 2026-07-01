@@ -9,31 +9,31 @@
 等价于：
   scrapy crawl lianjia -a city=bj -a city_name=北京 -a max_pages=5
 """
-import sys  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+import sys  # 导入 sys 模块，为当前文件提供所需功能。
 
-from scrapy.crawler import CrawlerProcess  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from scrapy.utils.project import get_project_settings  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from scrapy.crawler import CrawlerProcess  # 从 scrapy.crawler 导入 CrawlerProcess，供本文件后续逻辑调用。
+from scrapy.utils.project import get_project_settings  # 从 scrapy.utils.project 导入 get_project_settings，供本文件后续逻辑调用。
 
-from housing_crawler.spiders.lianjia import LianjiaSpider  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-
-
-def main():  # 定义函数入口，将输入参数转换为业务数据或接口响应。
-    """作为脚本入口执行当前文件的主要导入、迁移或启动流程。"""
-    args = sys.argv[1:]  # 计算或更新args中间数据，作为后续业务判断、统计或响应组装的输入。
-    kwargs = {}  # 初始化kwargs中间数据字典，用于承载接口返回或中间聚合结果。
-    if len(args) >= 1:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        kwargs["city"] = args[0]  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    if len(args) >= 2:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        kwargs["city_name"] = args[1]  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    if len(args) >= 3:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        kwargs["max_pages"] = args[2]  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    if len(args) >= 4:  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-        kwargs["region"] = args[3]  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-
-    process = CrawlerProcess(get_project_settings())  # 从请求或外部输入提取process中间数据，用于后续校验、查询或写入。
-    process.crawl(LianjiaSpider, **kwargs)  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    process.start()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+from housing_crawler.spiders.lianjia import LianjiaSpider  # 从 housing_crawler.spiders.lianjia 导入 LianjiaSpider，供本文件后续逻辑调用。
 
 
-if __name__ == "__main__":  # 根据当前输入、查询结果或数据状态选择对应处理分支。
-    main()  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
+def main():  # 定义 main 函数，集中处理这一段业务逻辑。
+    """作为脚本入口执行当前文件的主要导入、迁移或启动流程。"""  # 保留字符串内容，作为说明文本或页面展示文案。
+    args = sys.argv[1:]  # 设置 args 的值，供后续业务判断、查询或响应组装使用。
+    kwargs = {}  # 设置 kwargs 的值，供后续业务判断、查询或响应组装使用。
+    if len(args) >= 1:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        kwargs["city"] = args[0]  # 设置 kwargs["city" 的值，供后续业务判断、查询或响应组装使用。
+    if len(args) >= 2:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        kwargs["city_name"] = args[1]  # 设置 kwargs["city_name" 的值，供后续业务判断、查询或响应组装使用。
+    if len(args) >= 3:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        kwargs["max_pages"] = args[2]  # 设置 kwargs["max_pages" 的值，供后续业务判断、查询或响应组装使用。
+    if len(args) >= 4:  # 判断当前条件是否成立，决定是否进入对应处理分支。
+        kwargs["region"] = args[3]  # 设置 kwargs["region" 的值，供后续业务判断、查询或响应组装使用。
+
+    process = CrawlerProcess(get_project_settings())  # 设置 process 的值，供后续业务判断、查询或响应组装使用。
+    process.crawl(LianjiaSpider, **kwargs)  # 执行当前代码行对应的业务处理步骤。
+    process.start()  # 执行当前代码行对应的业务处理步骤。
+
+
+if __name__ == "__main__":  # 判断当前条件是否成立，决定是否进入对应处理分支。
+    main()  # 执行当前代码行对应的业务处理步骤。

@@ -3,32 +3,32 @@
 Import order matters only in that every model module must be imported before
 ``db.create_all()`` runs — :func:`register_models` guarantees that.
 """
-from extensions import db  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from extensions import db  # 从 extensions 导入 db，供本文件后续逻辑调用。
 
-from .city import City  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from .district import District  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from .facility import Facility  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from .price_history import PriceHistory  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from .property import Property  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from .property_transaction import PropertyTransaction  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
-from .user import User  # 引入当前模块需要的依赖，支撑数据库访问、接口处理或数据清洗流程。
+from .city import City  # 从 .city 导入 City，供本文件后续逻辑调用。
+from .district import District  # 从 .district 导入 District，供本文件后续逻辑调用。
+from .facility import Facility  # 从 .facility 导入 Facility，供本文件后续逻辑调用。
+from .price_history import PriceHistory  # 从 .price_history 导入 PriceHistory，供本文件后续逻辑调用。
+from .property import Property  # 从 .property 导入 Property，供本文件后续逻辑调用。
+from .property_transaction import PropertyTransaction  # 从 .property_transaction 导入 PropertyTransaction，供本文件后续逻辑调用。
+from .user import User  # 从 .user 导入 User，供本文件后续逻辑调用。
 
-__all__ = [  # 初始化__all__中间数据列表，用于收集清洗后的多条业务数据。
-    "db",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "City",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "District",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "Property",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "PropertyTransaction",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "User",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "Facility",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "PriceHistory",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-    "register_models",  # 执行当前业务步骤，推动数据从输入、处理到输出继续流转。
-]  # 完成当前查询、参数或数据结构的组装，使上层表达式可以继续执行。
+__all__ = [  # 设置 __all__ 的值，供后续业务判断、查询或响应组装使用。
+    "db",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "City",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "District",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "Property",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "PropertyTransaction",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "User",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "Facility",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "PriceHistory",  # 保留字符串内容，作为说明文本或页面展示文案。
+    "register_models",  # 保留字符串内容，作为说明文本或页面展示文案。
+]  # 结束当前多行数据结构或函数调用。
 
 
-def register_models() -> None:  # 定义函数入口，将输入参数转换为业务数据或接口响应。
+def register_models() -> None:  # 定义 register_models 函数，集中处理这一段业务逻辑。
     """No-op hook: importing this package already registered every table.
 
     Kept as an explicit call site in the app factory for readability.
     """
-    return None  # 返回已经整理好的业务数据，交给接口调用方或上层逻辑继续使用。
+    return None  # 返回处理后的结果给调用方继续使用。
